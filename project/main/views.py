@@ -3,18 +3,14 @@ import json
 
 from django.shortcuts import render
 from django.http import JsonResponse
+from django.conf import settings
 import plaid
 
 from .models import Item
 
 
-PLAID_CLIENT_ID = os.getenv('PLAID_CLIENT_ID')
-PLAID_SECRET = os.getenv('PLAID_SECRET')
-PLAID_PUBLIC_KEY = os.getenv('PLAID_PUBLIC_KEY')
-PLAID_ENV = os.getenv('PLAID_ENV', 'sandbox')
-
-client = plaid.Client(client_id = PLAID_CLIENT_ID, secret=PLAID_SECRET,
-        public_key=PLAID_PUBLIC_KEY, environment=PLAID_ENV)
+client = plaid.Client(client_id = settings.PLAID_CLIENT_ID, secret=settings.PLAID_SECRET,
+        public_key=settings.PLAID_PUBLIC_KEY, environment=settings.PLAID_ENV)
 
 # Helpers
 def memoize(obj):
@@ -38,8 +34,8 @@ def institution_factory(item_response):
 def index(request):
     items = Item.objects.filter(user_id=1)
     context = {
-            'plaid_public_key': PLAID_PUBLIC_KEY,
-            'plaid_environment': PLAID_ENV,
+            'plaid_public_key': settings.PLAID_PUBLIC_KEY,
+            'plaid_environment': settings.PLAID_ENV,
             'linked_items': items,
             }
     return render(request, 'main/index.html', context)
@@ -54,7 +50,7 @@ def create_item(request):
             institution_id=institution_factory(item_factory(access_token))['institution']['institution_id'],
             institution_name=institution_factory(item_factory(access_token))['institution']['name'],
             access_token=access_token,
-            user_id=1)
+            user=request.user)
 
     new_item.save()
     return JsonResponse({ 'error': 'none' })
