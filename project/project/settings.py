@@ -133,3 +133,9 @@ PLAID_CLIENT_ID = os.getenv('PLAID_CLIENT_ID')
 PLAID_SECRET = os.getenv('PLAID_SECRET')
 PLAID_PUBLIC_KEY = os.getenv('PLAID_PUBLIC_KEY')
 PLAID_ENV = os.getenv('PLAID_ENV', 'sandbox')
+
+APP_ENV = os.getenv('APP_ENV', 'local')
+WEBHOOK_BASE_URL = {
+        'local': 'https://mw-test-requestbin.herokuapp.com/1epgsnj1',
+        'dev': 'https://ghostclip.herokuapp.com',
+        }.get(APP_ENV)

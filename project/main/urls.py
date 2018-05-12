@@ -4,9 +4,6 @@ from . import views
 
 urlpatterns = [
         path('', views.index, name='index'),
-        path('create_item', views.create_item, name='create_index')
+        path('create_item', views.create_item, name='create_item'),
+        path('transactions_update', views.transactions_update, name='transactions_update'),
         ]
-
-
-# @app.route("/get_access_token", methods=['POST'])
-# @app.route("/item", methods=['GET', 'POST'])

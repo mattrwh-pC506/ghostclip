@@ -42,7 +42,7 @@ def create_item(request):
     new_item.save()
     return JsonResponse({ 'item_id': new_item.item_id})
 
-def transaction_hook(request):
+def transactions_update(request):
     item = Item.objects.filter(pk=request.POST.get('item_id')).first()
     new_transction_count  = request.POST.get('new_transactions')
     response = client.Transactions.get(item.access_token, count=new_transaction_count)

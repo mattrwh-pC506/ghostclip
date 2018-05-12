@@ -97,21 +97,22 @@
 <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
 <script>
   (function($) {
-    var handler = Plaid.create({
-      apiVersion: 'v2',
-      clientName: 'Plaid Walkthrough Demo',
-      env: '{{ plaid_environment }}',
-      product: ['transactions'],
-      key: '{{ plaid_public_key }}',
-      webhook: 'https://mw-test-requestbin.herokuapp.com/1epgsnj1',
-      onSuccess: function(public_token) {
-        let protocol = window.location.protocol;
-        let base_url = window.location.host;
-        $.post('/main/create_item', {public_token: public_token}, function(res) {
-          window.location.href = `${protocol}//${base_url}/admin/main/item/${res.item_id}/change`;
-        });
-      },
-    });
+    console.log('{{plaid_environment}}')
+      var handler = Plaid.create({
+        apiVersion: 'v2',
+        clientName: 'Plaid Walkthrough Demo',
+        env: '{{ plaid_environment }}',
+        product: ['transactions'],
+        key: '{{ plaid_public_key }}',
+        webhook: '{{ transactions_webhook }}',
+        onSuccess: function(public_token) {
+          let protocol = window.location.protocol;
+          let base_url = window.location.host;
+          $.post('/main/create_item', {public_token: public_token}, function(res) {
+            window.location.href = `${protocol}//${base_url}/admin/main/item/${res.item_id}/change`;
+          });
+        },
+      });
 
     $('#link-btn').on('click', function(e) {
       handler.open();

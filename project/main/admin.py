@@ -17,6 +17,13 @@ class ItemAdmin(admin.ModelAdmin):
         ec = extra_context or {}
         ec['plaid_public_key'] = settings.PLAID_PUBLIC_KEY
         ec['plaid_environment'] = settings.PLAID_ENV
+
+        webhook_url = settings.WEBHOOK_BASE_URL
+        if settings.APP_ENV != 'local':
+            webhook_url += '/main/transactions_update'
+
+        ec['transactions_webhook'] = webhook_url
+
         return super().changeform_view(request, object_id, form_url, extra_context=ec)
 
 @admin.register(Calendar)
