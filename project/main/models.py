@@ -59,6 +59,9 @@ class Location(models.Model):
     lat = models.CharField(max_length=50)
     lon = models.CharField(max_length=50)
 
+    class Meta:
+        unique_together = ('address', 'city', 'state', 'zip', 'lon', 'lat',)
+
 class Transaction(models.Model):
     transaction_id = models.CharField(max_length=255, primary_key=True)
     account = models.ForeignKey(Account, on_delete=models.CASCADE)

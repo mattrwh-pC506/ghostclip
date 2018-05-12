@@ -13,24 +13,6 @@ from .models import Item, Account, Category, Location, Transaction
 client = plaid.Client(client_id = settings.PLAID_CLIENT_ID, secret=settings.PLAID_SECRET,
         public_key=settings.PLAID_PUBLIC_KEY, environment=settings.PLAID_ENV)
 
-# Helpers
-def memoize(obj):
-    cache = obj.cache = {}
-    def memoizer(*args, **kwargs):
-        sargs = json.dumps(args)
-        if sargs not in cache:
-            cache[sargs] = obj(*args, **kwargs)
-        return cache[sargs]
-    return memoizer
-
-@memoize
-def item_factory(access_token):
-    return client.Item.get(access_token)
-
-@memoize
-def institution_factory(item_response):
-    return client.Institutions.get_by_id(item_response['item']['institution_id'])
-
 # Views
 def index(request):
     items = Item.objects.filter(user_id=1)
@@ -45,11 +27,14 @@ def create_item(request):
     public_token = request.POST.get('public_token')
     exchange_response = client.Item.public_token.exchange(public_token)
     access_token = exchange_response['access_token']
+    item_res = client.Item.get(access_token)
+    print(item_res)
+    institution_res = client.Institutions.get_by_id(item_res['item']['institution_id'])
 
     new_item = Item.objects.create(
-            item_id=item_factory(access_token)['item']['item_id'],
-            institution_id=institution_factory(item_factory(access_token))['institution']['institution_id'],
-            institution_name=institution_factory(item_factory(access_token))['institution']['name'],
+            item_id=item_res.get('item', {})['item_id'],
+            institution_id=institution_res.get('institution', {})['institution_id'],
+            institution_name=institution_res.get('institution', {})['name'],
             access_token=access_token,
             public_token=public_token,
             family=request.user.family)
@@ -58,13 +43,13 @@ def create_item(request):
     return JsonResponse({ 'item_id': new_item.item_id})
 
 def transaction_hook(request):
-    item = Item.objects.get(pk=request.POST.get('item_id'))
+    item = Item.objects.filter(pk=request.POST.get('item_id')).first()
     new_transction_count  = request.POST.get('new_transactions')
     response = client.Transactions.get(item.access_token, count=new_transaction_count)
 
     for account in response.get('accounts', []):
         aid = account['account_id']
-        acc = Account.objects.get(pk=aid) or Account(account_id=aid)
+        acc = Account.objects.filter(pk=aid).first() or Account(account_id=aid)
         acc.available_balance=account.get('balances', {})['avaliable'],
         acc.current_balance=account.get('balances', {})['current'],
         acc.limit=account.get('balances', {})['limit'],
@@ -77,8 +62,8 @@ def transaction_hook(request):
 
     for transaction in response.get('transactions', []):
         tid = transaction['transaction_id']
-        tran = Transaction.objects.get(pk=tid) or Transaction(transaction_id=tid)
-        tran.account = Account.objects.get(pk=tran['account_id'])
+        tran = Transaction.objects.filter(pk=tid).first() or Transaction(transaction_id=tid)
+        tran.account = Account.objects.filter(pk=tran['account_id']).first()
         tran.amount = response['amount']
         tran.name = response['name']
         tran.pending = response['pending']
@@ -86,10 +71,10 @@ def transaction_hook(request):
 
         categories = list(enumerate(transaction.get('category', [])))
         for index, category in categories:
-            cat = Category.objects.get(pk=category)
+            cat = Category.objects.filter(pk=category).first()
             if not cat:
                 cat = Category(token=category)
-                parent = Category.objects.get(pk=categories[index][1])
+                parent = Category.objects.filter(pk=categories[index][1]).first()
                 if parent:
                     cat.parent = parent
                 cat.save()
