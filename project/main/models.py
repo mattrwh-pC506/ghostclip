@@ -17,14 +17,14 @@ class Item(models.Model):
     item_id = models.CharField(max_length=255, primary_key=True)
     institution_id = models.CharField(max_length=255)
     institution_name = models.CharField(max_length=255)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    family = models.ForeignKey(Family, on_delete=models.CASCADE)
     access_token = models.CharField(max_length=255)
 
     class Meta:
-        unique_together = ('institution_id', 'user',)
+        unique_together = ('institution_id', 'family',)
 
     def __str__(self):
-        return '{}-{}'.format(self.institution_name, self.user.username)
+        return '{}-{}'.format(self.institution_name, self.family.name)
 
 class Calendar(models.Model):
     calendar_id = models.CharField(max_length=255, primary_key=True)
@@ -33,4 +33,4 @@ class Calendar(models.Model):
     refresh_token = models.CharField(max_length=255)
 
     def __str__(self):
-        return '{}-{}-{}'.format(self.provider, self.user.username, self.user.calendar_id)
+        return '{}-{}-{}'.format(self.provider, self.user.username, self.calendar_id)

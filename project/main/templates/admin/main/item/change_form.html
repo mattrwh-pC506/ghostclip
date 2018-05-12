@@ -24,87 +24,97 @@
 {% endif %}
 
 {% block content %}<div id="content-main">
-  <button id="link-btn">Connect Bank Accounts</button>
-  {% block object-tools %}
-  {% if change %}{% if not is_popup %}
-  <ul class="object-tools">
-    {% block object-tools-items %}
-    <li>
-      {% url opts|admin_urlname:'history' original.pk|admin_urlquote as history_url %}
-      <a href="{% add_preserved_filters history_url %}" class="historylink">{% trans "History" %}</a>
-    </li>
-    {% if has_absolute_url %}<li><a href="{{ absolute_url }}" class="viewsitelink">{% trans "View on site" %}</a></li>{% endif %}
+  <div id="content-main">
+    <ul class="object-tools">
+      <li>
+        <a id="link-btn" href="/admin/main/item/add/" class="addlink">
+          Connect Bank Accounts
+        </a>
+      </li>
+    </ul>
+  </div>
+</div>
+{% block object-tools %}
+{% if change %}{% if not is_popup %}
+<ul class="object-tools">
+  {% block object-tools-items %}
+  <li>
+    {% url opts|admin_urlname:'history' original.pk|admin_urlquote as history_url %}
+    <a href="{% add_preserved_filters history_url %}" class="historylink">{% trans "History" %}</a>
+  </li>
+  {% if has_absolute_url %}<li><a href="{{ absolute_url }}" class="viewsitelink">{% trans "View on site" %}</a></li>{% endif %}
+  {% endblock %}
+</ul>
+{% endif %}{% endif %}
+{% endblock %}
+<form {% if has_file_field %}enctype="multipart/form-data" {% endif %}action="{{ form_url }}" method="post" id="{{ opts.model_name }}_form" novalidate>{% csrf_token %}{% block form_top %}{% endblock %}
+  <div>
+    {% if is_popup %}<input type="hidden" name="{{ is_popup_var }}" value="1" />{% endif %}
+    {% if to_field %}<input type="hidden" name="{{ to_field_var }}" value="{{ to_field }}" />{% endif %}
+    {% if save_on_top %}{% block submit_buttons_top %}{% submit_row %}{% endblock %}{% endif %}
+    {% if errors %}
+    <p class="errornote">
+    {% if errors|length == 1 %}{% trans "Please correct the error below." %}{% else %}{% trans "Please correct the errors below." %}{% endif %}
+    </p>
+    {{ adminform.form.non_field_errors }}
+    {% endif %}
+
+    {% block field_sets %}
+    {% for fieldset in adminform %}
+    {% include "admin/includes/fieldset.html" %}
+    {% endfor %}
     {% endblock %}
-  </ul>
-  {% endif %}{% endif %}
-  {% endblock %}
-  <form {% if has_file_field %}enctype="multipart/form-data" {% endif %}action="{{ form_url }}" method="post" id="{{ opts.model_name }}_form" novalidate>{% csrf_token %}{% block form_top %}{% endblock %}
-    <div>
-      {% if is_popup %}<input type="hidden" name="{{ is_popup_var }}" value="1" />{% endif %}
-      {% if to_field %}<input type="hidden" name="{{ to_field_var }}" value="{{ to_field }}" />{% endif %}
-      {% if save_on_top %}{% block submit_buttons_top %}{% submit_row %}{% endblock %}{% endif %}
-      {% if errors %}
-      <p class="errornote">
-      {% if errors|length == 1 %}{% trans "Please correct the error below." %}{% else %}{% trans "Please correct the errors below." %}{% endif %}
-      </p>
-      {{ adminform.form.non_field_errors }}
-      {% endif %}
 
-      {% block field_sets %}
-      {% for fieldset in adminform %}
-      {% include "admin/includes/fieldset.html" %}
-      {% endfor %}
-      {% endblock %}
+    {% block after_field_sets %}{% endblock %}
 
-      {% block after_field_sets %}{% endblock %}
+    {% block inline_field_sets %}
+    {% for inline_admin_formset in inline_admin_formsets %}
+    {% include inline_admin_formset.opts.template %}
+    {% endfor %}
+    {% endblock %}
 
-      {% block inline_field_sets %}
-      {% for inline_admin_formset in inline_admin_formsets %}
-      {% include inline_admin_formset.opts.template %}
-      {% endfor %}
-      {% endblock %}
+    {% block after_related_objects %}{% endblock %}
 
-      {% block after_related_objects %}{% endblock %}
+    {% block submit_buttons_bottom %}{% submit_row %}{% endblock %}
 
-      {% block submit_buttons_bottom %}{% submit_row %}{% endblock %}
+    {% block admin_change_form_document_ready %}
+    <script type="text/javascript"
+            id="django-admin-form-add-constants"
+            src="{% static 'admin/js/change_form.js' %}"
+            {% if adminform and add %}
+            data-model-name="{{ opts.model_name }}"
+            {% endif %}>
+    </script>
+    {% endblock %}
 
-      {% block admin_change_form_document_ready %}
-      <script type="text/javascript"
-              id="django-admin-form-add-constants"
-              src="{% static 'admin/js/change_form.js' %}"
-              {% if adminform and add %}
-              data-model-name="{{ opts.model_name }}"
-              {% endif %}>
-      </script>
-      {% endblock %}
+    {# JavaScript for prepopulated fields #}
+    {% prepopulated_fields_js %}
 
-      {# JavaScript for prepopulated fields #}
-      {% prepopulated_fields_js %}
+  </div>
+</form></div>
 
-    </div>
-  </form></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.3/jquery.min.js"></script>
+<script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+<script>
+  (function($) {
+    var handler = Plaid.create({
+      apiVersion: 'v2',
+      clientName: 'Plaid Walkthrough Demo',
+      env: '{{ plaid_environment }}',
+      product: ['transactions'],
+      key: '{{ plaid_public_key }}',
+      onSuccess: function(public_token) {
+        let protocol = window.location.protocol;
+        let base_url = window.location.host;
+        $.post('/main/create_item', {public_token: public_token}, function(res) {
+          window.location.href = `${protocol}//${base_url}/admin/main/item/${res.item_id}/change`;
+        });
+      },
+    });
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.3/jquery.min.js"></script>
-  <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
-  <script>
-    (function($) {
-      var handler = Plaid.create({
-        apiVersion: 'v2',
-        clientName: 'Plaid Walkthrough Demo',
-        env: '{{ plaid_environment }}',
-        product: ['transactions'],
-        key: '{{ plaid_public_key }}',
-        onSuccess: function(public_token) {
-          $.post('/main/create_item', {public_token: public_token}, function(res) {
-            console.log(res)
-          });
-        },
-      });
-
-      $('#link-btn').on('click', function(e) {
-        console.log('ping')
-          handler.open();
-      });
-    })(jQuery);
-  </script>
-  {% endblock %}
+    $('#link-btn').on('click', function(e) {
+      handler.open();
+    });
+  })(jQuery);
+</script>
+{% endblock %}

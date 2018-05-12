@@ -50,7 +50,9 @@ def create_item(request):
             institution_id=institution_factory(item_factory(access_token))['institution']['institution_id'],
             institution_name=institution_factory(item_factory(access_token))['institution']['name'],
             access_token=access_token,
-            user=request.user)
+            family=request.user.family)
 
     new_item.save()
-    return JsonResponse({ 'error': 'none' })
+    return JsonResponse({ 'item_id': new_item.item_id})
+
+
