@@ -45,7 +45,9 @@ def create_item(request):
 def transactions_update(request):
     item = Item.objects.filter(pk=request.POST.get('item_id')).first()
     new_transction_count  = request.POST.get('new_transactions')
-    response = client.Transactions.get(item.access_token, count=new_transaction_count)
+    today = datetime.date.today()
+    week_ago = today - datetime.timedelta(days=7)
+    response = client.Transactions.get(item.access_token, start_date=week_ago, end_date=today, count=new_transaction_count)
 
     for account in response.get('accounts', []):
         aid = account['account_id']
