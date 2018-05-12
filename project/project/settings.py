@@ -26,7 +26,10 @@ SECRET_KEY = '8pbx66+cm-s@b7w-3d7!s#ris-dl^ypb-2lg9-9pi6!xg6c(9-'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+        'ghostclip.herokuapp.com',
+        'localhost',
+        ]
 
 
 # Application definition
