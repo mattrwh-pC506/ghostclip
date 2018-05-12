@@ -19,6 +19,7 @@ class Item(models.Model):
     institution_name = models.CharField(max_length=255)
     family = models.ForeignKey(Family, on_delete=models.CASCADE)
     access_token = models.CharField(max_length=255)
+    public_token = models.CharField(max_length=255)
 
     class Meta:
         unique_together = ('institution_id', 'family',)
@@ -34,3 +35,36 @@ class Calendar(models.Model):
 
     def __str__(self):
         return '{}-{}-{}'.format(self.provider, self.user.username, self.calendar_id)
+
+class Account(models.Model):
+    account_id = models.CharField(max_length=255, primary_key=True)
+    available_balance = models.DecimalField(max_digits=20, decimal_places=2)
+    current_balance = models.DecimalField(max_digits=20, decimal_places=2)
+    limit = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    mask = models.CharField(max_length=20, null=True)
+    name = models.CharField(max_length=100, null=True)
+    official_name = models.CharField(max_length=100, null=True)
+    subtype = models.CharField(max_length=50, null=True)
+    type = models.CharField(max_length=50, null=True)
+
+class Category(models.Model):
+    token = models.CharField(max_length=100, primary_key=True)
+    parent = models.ForeignKey('Category', on_delete=models.CASCADE, null=True)
+
+class Location(models.Model):
+    address = models.CharField(max_length=100)
+    city = models.CharField(max_length=50)
+    state = models.CharField(max_length=20)
+    zip = models.CharField(max_length=20)
+    lat = models.CharField(max_length=50)
+    lon = models.CharField(max_length=50)
+
+class Transaction(models.Model):
+    transaction_id = models.CharField(max_length=255, primary_key=True)
+    account = models.ForeignKey(Account, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    categories = models.ManyToManyField(Category)
+    date = models.DateField()
+    location = models.ForeignKey(Location, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    pending = models.BooleanField()

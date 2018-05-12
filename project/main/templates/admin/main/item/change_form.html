@@ -27,7 +27,7 @@
   <div id="content-main">
     <ul class="object-tools">
       <li>
-        <a id="link-btn" href="/admin/main/item/add/" class="addlink">
+        <a id="link-btn" href="javascript: void(0)" class="addlink">
           Connect Bank Accounts
         </a>
       </li>
@@ -103,6 +103,7 @@
       env: '{{ plaid_environment }}',
       product: ['transactions'],
       key: '{{ plaid_public_key }}',
+      webhook: 'https://mw-test-requestbin.herokuapp.com/1epgsnj1',
       onSuccess: function(public_token) {
         let protocol = window.location.protocol;
         let base_url = window.location.host;

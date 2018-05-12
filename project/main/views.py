@@ -1,12 +1,13 @@
 import os
 import json
+import datetime
 
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.conf import settings
 import plaid
 
-from .models import Item
+from .models import Item, Account, Category, Location, Transaction
 
 
 client = plaid.Client(client_id = settings.PLAID_CLIENT_ID, secret=settings.PLAID_SECRET,
@@ -50,9 +51,65 @@ def create_item(request):
             institution_id=institution_factory(item_factory(access_token))['institution']['institution_id'],
             institution_name=institution_factory(item_factory(access_token))['institution']['name'],
             access_token=access_token,
+            public_token=public_token,
             family=request.user.family)
 
     new_item.save()
     return JsonResponse({ 'item_id': new_item.item_id})
 
+def transaction_hook(request):
+    item = Item.objects.get(pk=request.POST.get('item_id'))
+    new_transction_count  = request.POST.get('new_transactions')
+    response = client.Transactions.get(item.access_token, count=new_transaction_count)
 
+    for account in response.get('accounts', []):
+        aid = account['account_id']
+        acc = Account.objects.get(pk=aid) or Account(account_id=aid)
+        acc.available_balance=account.get('balances', {})['avaliable'],
+        acc.current_balance=account.get('balances', {})['current'],
+        acc.limit=account.get('balances', {})['limit'],
+        acc.mask=account['mask'],
+        acc.name=account['name'],
+        acc.official_name=account['official_name'],
+        acc.subtype=account['subtype'],
+        acc.type=account['type'],
+        acc.save()
+
+    for transaction in response.get('transactions', []):
+        tid = transaction['transaction_id']
+        tran = Transaction.objects.get(pk=tid) or Transaction(transaction_id=tid)
+        tran.account = Account.objects.get(pk=tran['account_id'])
+        tran.amount = response['amount']
+        tran.name = response['name']
+        tran.pending = response['pending']
+        tran.date = datetime.datetime.strptime(response['date'], '%Y-%m-%d').date()
+
+        categories = list(enumerate(transaction.get('category', [])))
+        for index, category in categories:
+            cat = Category.objects.get(pk=category)
+            if not cat:
+                cat = Category(token=category)
+                parent = Category.objects.get(pk=categories[index][1])
+                if parent:
+                    cat.parent = parent
+                cat.save()
+
+            existing_cat_rel = Transactions.objects.filter(
+                    pk=tran.transaction_id,
+                    categories__pk=cat.category_id)
+
+            if not existing_cat_rel:
+                tran.categories.add(cat)
+
+        location = get('location', {})
+        loc = Location.objects.filter(*location).first() or Location(*location)
+        loc.save()
+        tran.location = loc
+
+        tran.save()
+
+        ptid = response['pending_transaction']
+        if ptid:
+            ptran = Transactions.object.get(pk=ptid).delete()
+
+    return JsonResponse({ message: 'success' })
