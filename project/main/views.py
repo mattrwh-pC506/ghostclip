@@ -43,6 +43,8 @@ def create_item(request):
     return JsonResponse({ 'item_id': new_item.item_id})
 
 def transactions_update(request):
+    print('item_id', request.POST.get('item_id'))
+    print(request.POST)
     item = Item.objects.filter(pk=request.POST.get('item_id')).first()
     new_transction_count  = request.POST.get('new_transactions')
     today = datetime.date.today()
