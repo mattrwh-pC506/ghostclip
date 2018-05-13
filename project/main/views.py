@@ -43,10 +43,11 @@ def create_item(request):
     return JsonResponse({ 'item_id': new_item.item_id})
 
 def transactions_update(request):
-    print('item_id', request.POST.get('item_id'))
-    print(request.POST)
-    item = Item.objects.filter(pk=request.POST.get('item_id')).first()
-    new_transction_count  = request.POST.get('new_transactions')
+
+    print('item_id', request.body.get('item_id'))
+    print(request.body)
+    item = Item.objects.filter(pk=request.body.get('item_id')).first()
+    new_transction_count  = request.body.get('new_transactions')
     today = datetime.date.today()
     week_ago = today - datetime.timedelta(days=7)
     response = client.Transactions.get(item.access_token, start_date=str(week_ago), end_date=str(today), count=new_transaction_count)
