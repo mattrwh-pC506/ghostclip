@@ -1,1 +1,1 @@
-web: cd project && gunicorn project.wsgi
+web: cd project && python manage.py migrate && gunicorn project.wsgi
