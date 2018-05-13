@@ -46,7 +46,7 @@ def transactions_update(request):
     body = json.loads(request.body)
     print(body)
     item = Item.objects.filter(pk=body.get('item_id')).first()
-    new_transction_count  = body.get('new_transactions')
+    new_transaction_count  = body.get('new_transactions')
     today = datetime.date.today()
     week_ago = today - datetime.timedelta(days=7)
     response = client.Transactions.get(item.access_token, start_date=str(week_ago), end_date=str(today), count=new_transaction_count)
