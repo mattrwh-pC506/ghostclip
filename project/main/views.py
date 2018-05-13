@@ -1,12 +1,10 @@
 import os
 import json
 import datetime
-
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.conf import settings
 import plaid
-
 from .models import Item, Account, Category, Location, Transaction
 
 
@@ -28,7 +26,6 @@ def create_item(request):
     exchange_response = client.Item.public_token.exchange(public_token)
     access_token = exchange_response['access_token']
     item_res = client.Item.get(access_token)
-    print(item_res)
     institution_res = client.Institutions.get_by_id(item_res['item']['institution_id'])
 
     new_item = Item.objects.create(
@@ -49,7 +46,7 @@ def transactions_update(request):
     today = datetime.date.today()
     week_ago = today - datetime.timedelta(days=7)
     response = client.Transactions.get(item.access_token, start_date=str(week_ago), end_date=str(today), count=new_transaction_count)
-
+    print('transactions', response)
     for account in response.get('accounts', []):
         aid = account['account_id']
         acc = Account.objects.filter(pk=aid).first() or Account(account_id=aid)
