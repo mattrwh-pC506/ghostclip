@@ -44,7 +44,6 @@ def create_item(request):
 
 def transactions_update(request):
     body = json.loads(request.body)
-    print(body)
     item = Item.objects.filter(pk=body.get('item_id')).first()
     new_transaction_count  = body.get('new_transactions')
     today = datetime.date.today()
@@ -54,7 +53,7 @@ def transactions_update(request):
     for account in response.get('accounts', []):
         aid = account['account_id']
         acc = Account.objects.filter(pk=aid).first() or Account(account_id=aid)
-        acc.available_balance=account.get('balances', {})['avaliable'],
+        acc.available_balance=account.get('balances', {})['available'],
         acc.current_balance=account.get('balances', {})['current'],
         acc.limit=account.get('balances', {})['limit'],
         acc.mask=account['mask'],
