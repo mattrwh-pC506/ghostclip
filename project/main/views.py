@@ -11,6 +11,87 @@ from .models import Item, Account, Category, Location, Transaction
 client = plaid.Client(client_id = settings.PLAID_CLIENT_ID, secret=settings.PLAID_SECRET,
         public_key=settings.PLAID_PUBLIC_KEY, environment=settings.PLAID_ENV)
 
+# Helpers
+
+def calculate_date_offset(end_date, days_back_to_check):
+    return end_date - datetime.timedelta(days=days_back_to_check)
+
+def get_transactions(item, start_date, end_date):
+    transactions = client.Transactions.get(
+            item.access_token,
+            start_date=str(start_date),
+            end_date=str(end_date),
+            )
+    return transactions
+
+def create_and_update_accounts(response):
+    for account in response.get('accounts', []):
+        aid = account['account_id']
+        acc = Account.objects.filter(pk=aid).first() or Account(account_id=aid)
+        acc.available_balance=account.get('balances', {})['available']
+        acc.current_balance=account.get('balances', {})['current']
+        acc.limit=account.get('balances', {})['limit']
+        acc.mask=account['mask']
+        acc.name=account['name']
+        acc.official_name=account['official_name']
+        acc.subtype=account['subtype']
+        acc.type=account['type']
+        acc.save()
+
+def create_and_update_transactions(response):
+    for transaction in response.get('transactions', []):
+        tid = transaction['transaction_id']
+        tran = Transaction.objects.filter(pk=tid).first() or Transaction(transaction_id=tid)
+        tran.account = Account.objects.filter(pk=transaction['account_id']).first()
+        tran.amount = transaction['amount']
+        tran.name = transaction['name']
+        tran.pending = transaction['pending']
+        tran.date = datetime.datetime.strptime(transaction['date'], '%Y-%m-%d').date()
+
+        location = transaction.get('location', {})
+        loc = Location.objects.filter(
+                address=location['address'],
+                city=location['city'],
+                state=location['state'],
+                zip=location['zip'],
+                lat=location['lat'],
+                lon=location['lon'],
+                ).first()
+        if not loc:
+            loc = Location(
+                    address=location['address'],
+                    city=location['city'],
+                    state=location['state'],
+                    zip=location['zip'],
+                    lat=location['lat'],
+                    lon=location['lon'],
+                    )
+            loc.save()
+
+        tran.location = loc
+        tran.save()
+
+        categories = list(enumerate(transaction.get('category', [])))
+        for index, category in categories:
+            cat = Category.objects.filter(pk=category).first()
+            if not cat:
+                cat = Category(token=category)
+                parent = Category.objects.filter(pk=categories[index][1]).first()
+                if parent:
+                    cat.parent = parent
+                cat.save()
+
+            existing_cat_rel = Transaction.objects.filter(
+                    pk=tran.pk,
+                    categories__pk=cat.pk)
+
+            if not existing_cat_rel:
+                tran.categories.add(cat)
+
+        ptid = transaction['pending_transaction_id']
+        if ptid:
+            ptran = Transactions.object.get(pk=ptid).delete()
+
 # Views
 def index(request):
     items = Item.objects.filter(user_id=1)
@@ -37,64 +118,28 @@ def create_item(request):
             family=request.user.family)
 
     new_item.save()
-    return JsonResponse({ 'item_id': new_item.item_id})
+    return JsonResponse({ 'item_id': new_item.pk})
 
 def transactions_update(request):
     body = json.loads(request.body)
     item = Item.objects.filter(pk=body.get('item_id')).first()
-    new_transaction_count  = body.get('new_transactions')
-    today = datetime.date.today()
-    week_ago = today - datetime.timedelta(days=7)
-    response = client.Transactions.get(item.access_token, start_date=str(week_ago), end_date=str(today), count=new_transaction_count)
-    print('transactions', response)
-    for account in response.get('accounts', []):
-        aid = account['account_id']
-        acc = Account.objects.filter(pk=aid).first() or Account(account_id=aid)
-        acc.available_balance=account.get('balances', {})['available'],
-        acc.current_balance=account.get('balances', {})['current'],
-        acc.limit=account.get('balances', {})['limit'],
-        acc.mask=account['mask'],
-        acc.name=account['name'],
-        acc.official_name=account['official_name'],
-        acc.subtype=account['subtype'],
-        acc.type=account['type'],
-        acc.save()
+    webhook_code = body.get('webhook_code', '')
+    end_date = datetime.date.today()
 
-    for transaction in response.get('transactions', []):
-        tid = transaction['transaction_id']
-        tran = Transaction.objects.filter(pk=tid).first() or Transaction(transaction_id=tid)
-        tran.account = Account.objects.filter(pk=tran['account_id']).first()
-        tran.amount = response['amount']
-        tran.name = response['name']
-        tran.pending = response['pending']
-        tran.date = datetime.datetime.strptime(response['date'], '%Y-%m-%d').date()
+    if webhook_code == 'INITIAL_UPDATE':
+        response = get_transactions(item, calculate_date_offset(end_date, 30), end_date)
+        create_and_update_accounts(response)
+        create_and_update_transactions(response)
+    elif webhook_code == 'HISTORICAL_UPDATE':
+        for x in range(0, 365*10, 30):
+            end_date = calculate_date_offset(end_date, x)
+            start_date = calculate_date_offset(end_date, 30)
+            response = get_transactions(item, start_date, end_date)
+            create_and_update_accounts(response)
+            create_and_update_transactions(response)
+    else:
+        response = get_transactions(item, calculate_date_offset(end_date, 7), end_date)
+        create_and_update_accounts(response)
+        create_and_update_transactions(response)
 
-        categories = list(enumerate(transaction.get('category', [])))
-        for index, category in categories:
-            cat = Category.objects.filter(pk=category).first()
-            if not cat:
-                cat = Category(token=category)
-                parent = Category.objects.filter(pk=categories[index][1]).first()
-                if parent:
-                    cat.parent = parent
-                cat.save()
-
-            existing_cat_rel = Transactions.objects.filter(
-                    pk=tran.transaction_id,
-                    categories__pk=cat.category_id)
-
-            if not existing_cat_rel:
-                tran.categories.add(cat)
-
-        location = get('location', {})
-        loc = Location.objects.filter(*location).first() or Location(*location)
-        loc.save()
-        tran.location = loc
-
-        tran.save()
-
-        ptid = response['pending_transaction']
-        if ptid:
-            ptran = Transactions.object.get(pk=ptid).delete()
-
-    return JsonResponse({ message: 'success' })
+    return JsonResponse({ 'message': 'success' })
