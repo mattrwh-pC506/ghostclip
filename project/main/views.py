@@ -116,7 +116,8 @@ def create_item(request):
             institution_name=institution_res.get('institution', {})['name'],
             access_token=access_token,
             public_token=public_token,
-            family=request.user.family)
+            user=request.user,
+            )
 
     new_item.save()
     return JsonResponse({ 'item_id': new_item.pk})
