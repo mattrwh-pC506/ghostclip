@@ -38,6 +38,7 @@ class Calendar(models.Model):
 
 class Account(models.Model):
     account_id = models.CharField(max_length=255, primary_key=True)
+    item = models.ForeignKey(Item, on_delete=models.CASCADE)
     available_balance = models.DecimalField(max_digits=20, decimal_places=2)
     current_balance = models.DecimalField(max_digits=20, decimal_places=2)
     limit = models.DecimalField(max_digits=20, decimal_places=2, null=True)

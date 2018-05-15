@@ -24,10 +24,11 @@ def get_transactions(item, start_date, end_date):
             )
     return transactions
 
-def create_and_update_accounts(response):
+def create_and_update_accounts(response, item):
     for account in response.get('accounts', []):
         aid = account['account_id']
         acc = Account.objects.filter(pk=aid).first() or Account(account_id=aid)
+        acc.item = item
         acc.available_balance=account.get('balances', {})['available']
         acc.current_balance=account.get('balances', {})['current']
         acc.limit=account.get('balances', {})['limit']
@@ -128,18 +129,18 @@ def transactions_update(request):
 
     if webhook_code == 'INITIAL_UPDATE':
         response = get_transactions(item, calculate_date_offset(end_date, 30), end_date)
-        create_and_update_accounts(response)
+        create_and_update_accounts(response, item)
         create_and_update_transactions(response)
     elif webhook_code == 'HISTORICAL_UPDATE':
         for x in range(0, 365*10, 30):
             end_date = calculate_date_offset(end_date, x)
             start_date = calculate_date_offset(end_date, 30)
             response = get_transactions(item, start_date, end_date)
-            create_and_update_accounts(response)
+            create_and_update_accounts(response, item)
             create_and_update_transactions(response)
     else:
         response = get_transactions(item, calculate_date_offset(end_date, 7), end_date)
-        create_and_update_accounts(response)
+        create_and_update_accounts(response, item)
         create_and_update_transactions(response)
 
     return JsonResponse({ 'message': 'success' })
