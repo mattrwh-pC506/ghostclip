@@ -41,12 +41,14 @@ class Account(models.Model):
     item = models.ForeignKey(Item, on_delete=models.CASCADE)
     available_balance = models.DecimalField(max_digits=20, decimal_places=2)
     current_balance = models.DecimalField(max_digits=20, decimal_places=2)
-    limit = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    limit = models.DecimalField(max_digits=20, decimal_places=2, null=True, blank=True)
     mask = models.CharField(max_length=20, null=True)
     name = models.CharField(max_length=100, null=True)
-    official_name = models.CharField(max_length=100, null=True)
+    official_name = models.CharField(max_length=100, null=True, blank=True)
     subtype = models.CharField(max_length=50, null=True)
     type = models.CharField(max_length=50, null=True)
+
+    track = models.BooleanField()
 
     def __str__(self):
         return '{}-{}-{}'.format(self.mask, self.name, self.subtype)
