@@ -27,15 +27,6 @@ class Item(models.Model):
     def __str__(self):
         return '{}-{}'.format(self.institution_name, self.user.family.name)
 
-class Calendar(models.Model):
-    calendar_id = models.CharField(max_length=255, primary_key=True)
-    provider = models.CharField(max_length=255)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    refresh_token = models.CharField(max_length=255)
-
-    def __str__(self):
-        return '{}-{}-{}'.format(self.provider, self.user.username, self.calendar_id)
-
 class Account(models.Model):
     account_id = models.CharField(max_length=255, primary_key=True)
     item = models.ForeignKey(Item, on_delete=models.CASCADE)
@@ -70,6 +61,7 @@ class Location(models.Model):
 
 class Transaction(models.Model):
     transaction_id = models.CharField(max_length=255, primary_key=True)
+    calendar_event_id = models.CharField(max_length=255, null=True, blank=True)
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=20, decimal_places=2, null=True)
     categories = models.ManyToManyField(Category, null=True)

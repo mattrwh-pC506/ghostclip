@@ -5,7 +5,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django.conf import settings
 
-from .models import Family, User, Item, Calendar, Transaction, Location, Category, Account
+from .models import Family, User, Item, Transaction, Location, Category, Account
 
 @admin.register(Family)
 class FamilyAdmin(admin.ModelAdmin):
@@ -25,10 +25,6 @@ class ItemAdmin(admin.ModelAdmin):
         ec['transactions_webhook'] = webhook_url
 
         return super().changeform_view(request, object_id, form_url, extra_context=ec)
-
-@admin.register(Calendar)
-class CalendarAdmin(admin.ModelAdmin):
-    pass
 
 class UserChangeForm(forms.ModelForm):
     password = ReadOnlyPasswordHashField()
