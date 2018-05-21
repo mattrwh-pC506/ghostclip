@@ -41,6 +41,7 @@ INSTALLED_APPS = [
         'django.contrib.sessions',
         'django.contrib.messages',
         'django.contrib.staticfiles',
+        'django_rq',
         'main.apps.MainConfig',
         ]
 
@@ -151,3 +152,20 @@ WEBHOOK_BASE_URL = {
         'local': 'https://mw-test-requestbin.herokuapp.com/1epgsnj1',
         'dev': 'https://ghostclip.herokuapp.com',
         }.get(APP_ENV)
+
+RQ_QUEUES = {
+        'default': {
+            'URL': os.getenv('REDISTOGO_URL', 'redis://localhost:6379/0'),
+            'DEFAULT_TIMEOUT': 500,
+            },
+        'high': {
+            'URL': os.getenv('REDISTOGO_URL', 'redis://localhost:6379/0'),
+            'DEFAULT_TIMEOUT': 500,
+            },
+        'low': {
+            'URL': os.getenv('REDISTOGO_URL', 'redis://localhost:6379/0'),
+            'DEFAULT_TIMEOUT': 500,
+            }
+        }
+
+RQ_EXCEPTION_HANDLERS = [] # If you need custom exception handlers

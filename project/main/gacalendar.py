@@ -1,7 +1,6 @@
 import os
 from datetime import timedelta
 import datetime
-import pytz
 import httplib2
 import json
 from googleapiclient.discovery import build
