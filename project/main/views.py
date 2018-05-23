@@ -94,7 +94,17 @@ def create_and_update_transactions(response):
 
             ptid = transaction['pending_transaction_id']
             if ptid:
-                ptran = Transactions.object.get(pk=ptid).delete()
+                try:
+                    ptran = Transaction.objects.get(pk=ptid).delete()
+                except:
+                    pass
+
+def delete_missing_transactions(response, start_date, end_date):
+    incoming_transaction_ids = [t['transaction_id'] for t in response.get('transactions', [])]
+    transactions_to_delete = Transaction.objects.filter(date__gte=start_date, date__lte=end_date).exclude(transaction_id__in=incoming_transaction_ids)
+
+    for ttd in transactions_to_delete:
+        ttd.delete()
 
 # Views
 def index(request):
@@ -135,6 +145,7 @@ def transactions_update(request):
         response = get_transactions(item, calculate_date_offset(end_date, 30), end_date)
         create_and_update_accounts(response, item)
         create_and_update_transactions(response)
+
     elif webhook_code == 'HISTORICAL_UPDATE':
         for x in range(0, 365*10, 30):
             end_date = calculate_date_offset(end_date, x)
@@ -142,9 +153,18 @@ def transactions_update(request):
             response = get_transactions(item, start_date, end_date)
             create_and_update_accounts(response, item)
             create_and_update_transactions(response)
+            delete_missing_transactions(response, start_date, end_date)
+
+    elif webhook_code == 'TRANSACTIONS_REMOVED':
+        removed_transactions = body.get('removed_transactions', [])
+        for rt in removed_transactions:
+            to_delete = Transaction.objects.get(pk=to_delete)
+            to_delete.delete()
+
     else:
         response = get_transactions(item, calculate_date_offset(end_date, 7), end_date)
         create_and_update_accounts(response, item)
         create_and_update_transactions(response)
+        delete_missing_transactions(response, calculate_date_offset(end_date, 7), end_date)
 
     return JsonResponse({ 'message': 'success' })
