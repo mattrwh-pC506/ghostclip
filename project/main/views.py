@@ -8,12 +8,17 @@ import plaid
 from .models import Item, Account, Category, Location, Transaction
 
 from django_rq import job
+import django_rq
 
+scheduler = django_rq.get_scheduler('high')
 
 client = plaid.Client(client_id = settings.PLAID_CLIENT_ID, secret=settings.PLAID_SECRET,
         public_key=settings.PLAID_PUBLIC_KEY, environment=settings.PLAID_ENV)
 
 # Helpers
+
+def calculate_staggered_delay_queue(enqueue_at):
+    return enqueue_at + datetime.timedelta(minutes=1)
 
 def calculate_date_offset(end_date, days_back_to_check):
     return end_date - datetime.timedelta(days=days_back_to_check)
@@ -151,16 +156,18 @@ def transactions_update(request):
 
     if webhook_code == 'INITIAL_UPDATE':
         start_date = calculate_date_offset(end_date, 30)
-        create_and_update_accounts.delay(start_date, end_date, item)
-        create_and_update_transactions.delay(start_date, end_date, item)
+        create_and_update_accounts(start_date, end_date, item).delay()
+        create_and_update_transactions(start_date, end_date, item)
 
     elif webhook_code == 'HISTORICAL_UPDATE':
+        enqueue_at = datetime.datetime.now()
         for x in range(0, 12*10):
+            enqueue_at = calculate_staggered_delay_queue(enqueue_at)
             end_date = calculate_date_offset(end_date, 30)
             start_date = calculate_date_offset(end_date, 30)
-            create_and_update_accounts.delay(start_date, end_date, item)
-            create_and_update_transactions.delay(start_date, end_date, item)
-            delete_missing_transactions.delay(start_date, end_date, item)
+            scheduler.enqueue_at(enqueue_at, create_and_update_accounts, start_date, end_date, item)
+            scheduler.enqueue_at(enqueue_at, create_and_update_transactions, start_date, end_date, item)
+            scheduler.enqueue_at(enqueue_at, delete_missing_transactions, start_date, end_date, item)
 
     elif webhook_code == 'TRANSACTIONS_REMOVED':
         removed_transactions = body.get('removed_transactions', [])
