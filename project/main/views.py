@@ -7,7 +7,7 @@ from django.conf import settings
 import plaid
 from .models import Item, Account, Category, Location, Transaction
 
-import django_rq
+from django_rq import job
 
 
 client = plaid.Client(client_id = settings.PLAID_CLIENT_ID, secret=settings.PLAID_SECRET,
