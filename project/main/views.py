@@ -155,8 +155,8 @@ def transactions_update(request):
         create_and_update_transactions.delay(start_date, end_date, item)
 
     elif webhook_code == 'HISTORICAL_UPDATE':
-        for x in range(0, 365*10, 30):
-            end_date = calculate_date_offset(end_date, x)
+        for x in range(0, 12*10):
+            end_date = calculate_date_offset(end_date, 30)
             start_date = calculate_date_offset(end_date, 30)
             create_and_update_accounts.delay(start_date, end_date, item)
             create_and_update_transactions.delay(start_date, end_date, item)
