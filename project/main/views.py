@@ -7,7 +7,7 @@ from django.conf import settings
 import plaid
 from .models import Item, Account, Category, Location, Transaction
 
-from django_rq import job
+import django_rq
 
 
 client = plaid.Client(client_id = settings.PLAID_CLIENT_ID, secret=settings.PLAID_SECRET,
@@ -151,16 +151,16 @@ def transactions_update(request):
 
     if webhook_code == 'INITIAL_UPDATE':
         start_date = calculate_date_offset(end_date, 30)
-        create_and_update_accounts(start_date, end_date, item)
-        create_and_update_transactions(start_date, end_date, item)
+        create_and_update_accounts.delay(start_date, end_date, item)
+        create_and_update_transactions.delay(start_date, end_date, item)
 
     elif webhook_code == 'HISTORICAL_UPDATE':
         for x in range(0, 365*10, 30):
             end_date = calculate_date_offset(end_date, x)
             start_date = calculate_date_offset(end_date, 30)
-            create_and_update_accounts(start_date, end_date, item)
-            create_and_update_transactions(start_date, end_date, item)
-            delete_missing_transactions(start_date, end_date, item)
+            create_and_update_accounts.delay(start_date, end_date, item)
+            create_and_update_transactions.delay(start_date, end_date, item)
+            delete_missing_transactions.delay(start_date, end_date, item)
 
     elif webhook_code == 'TRANSACTIONS_REMOVED':
         removed_transactions = body.get('removed_transactions', [])
@@ -170,8 +170,8 @@ def transactions_update(request):
 
     else:
         start_date = calculate_date_offset(end_date, 7)
-        create_and_update_accounts(start_date, end_date, item)
-        create_and_update_transactions(start_date, end_date, item)
-        delete_missing_transactions(start_date, end_date, item)
+        create_and_update_accounts.delay(start_date, end_date, item)
+        create_and_update_transactions.delay(start_date, end_date, item)
+        delete_missing_transactions.delay(start_date, end_date, item)
 
     return JsonResponse({ 'message': 'success' })
