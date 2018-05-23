@@ -7,6 +7,8 @@ from django.conf import settings
 import plaid
 from .models import Item, Account, Category, Location, Transaction
 
+from django_rq import job
+
 
 client = plaid.Client(client_id = settings.PLAID_CLIENT_ID, secret=settings.PLAID_SECRET,
         public_key=settings.PLAID_PUBLIC_KEY, environment=settings.PLAID_ENV)
@@ -16,7 +18,7 @@ client = plaid.Client(client_id = settings.PLAID_CLIENT_ID, secret=settings.PLAI
 def calculate_date_offset(end_date, days_back_to_check):
     return end_date - datetime.timedelta(days=days_back_to_check)
 
-def get_transactions(item, start_date, end_date):
+def get_transactions(start_date, end_date, item):
     transactions = client.Transactions.get(
             item.access_token,
             start_date=str(start_date),
@@ -24,7 +26,9 @@ def get_transactions(item, start_date, end_date):
             )
     return transactions
 
-def create_and_update_accounts(response, item):
+@job('high')
+def create_and_update_accounts(start_date, end_date, item):
+    response = get_transactions(start_date, end_date, item)
     for account in response.get('accounts', []):
         aid = account['account_id']
         acc = Account.objects.filter(pk=aid).first() or Account(account_id=aid)
@@ -39,7 +43,9 @@ def create_and_update_accounts(response, item):
         acc.type=account['type']
         acc.save()
 
-def create_and_update_transactions(response):
+@job('high')
+def create_and_update_transactions(start_date, end_date, item):
+    response = get_transactions(start_date, end_date, item)
     for transaction in response.get('transactions', []):
         tid = transaction['transaction_id']
         account_obj = Account.objects.filter(pk=transaction['account_id']).first()
@@ -99,7 +105,9 @@ def create_and_update_transactions(response):
                 except:
                     pass
 
-def delete_missing_transactions(response, start_date, end_date):
+@job('high')
+def delete_missing_transactions(start_date, end_date, item):
+    response = get_transactions(start_date, end_date, item)
     incoming_transaction_ids = [t['transaction_id'] for t in response.get('transactions', [])]
     transactions_to_delete = Transaction.objects.filter(date__gte=start_date, date__lte=end_date).exclude(transaction_id__in=incoming_transaction_ids)
 
@@ -142,18 +150,17 @@ def transactions_update(request):
     end_date = datetime.date.today()
 
     if webhook_code == 'INITIAL_UPDATE':
-        response = get_transactions(item, calculate_date_offset(end_date, 30), end_date)
-        create_and_update_accounts(response, item)
-        create_and_update_transactions(response)
+        start_date = calculate_date_offset(end_date, 30)
+        create_and_update_accounts(start_date, end_date, item)
+        create_and_update_transactions(start_date, end_date, item)
 
     elif webhook_code == 'HISTORICAL_UPDATE':
         for x in range(0, 365*10, 30):
             end_date = calculate_date_offset(end_date, x)
             start_date = calculate_date_offset(end_date, 30)
-            response = get_transactions(item, start_date, end_date)
-            create_and_update_accounts(response, item)
-            create_and_update_transactions(response)
-            delete_missing_transactions(response, start_date, end_date)
+            create_and_update_accounts(start_date, end_date, item)
+            create_and_update_transactions(start_date, end_date, item)
+            delete_missing_transactions(start_date, end_date, item)
 
     elif webhook_code == 'TRANSACTIONS_REMOVED':
         removed_transactions = body.get('removed_transactions', [])
@@ -162,9 +169,9 @@ def transactions_update(request):
             to_delete.delete()
 
     else:
-        response = get_transactions(item, calculate_date_offset(end_date, 7), end_date)
-        create_and_update_accounts(response, item)
-        create_and_update_transactions(response)
-        delete_missing_transactions(response, calculate_date_offset(end_date, 7), end_date)
+        start_date = calculate_date_offset(end_date, 7)
+        create_and_update_accounts(start_date, end_date, item)
+        create_and_update_transactions(start_date, end_date, item)
+        delete_missing_transactions(start_date, end_date, item)
 
     return JsonResponse({ 'message': 'success' })
