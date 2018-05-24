@@ -160,6 +160,13 @@ def transactions_update(request):
             create_and_update_transactions.delay(start_date, end_date, item)
             delete_missing_transactions.delay(start_date, end_date, item)
 
+    elif webhook_code == 'MANUAL_UPDATE':
+        start_date = datetime.datetime.strptime(body.get('start_date', ''), '%Y-%m-%d').date()
+        end_date = datetime.datetime.strptime(body.get('end_date', ''), '%Y-%m-%d').date()
+        create_and_update_accounts.delay(start_date, end_date, item)
+        create_and_update_transactions.delay(start_date, end_date, item)
+        delete_missing_transactions.delay(start_date, end_date, item)
+
     elif webhook_code == 'TRANSACTIONS_REMOVED':
         removed_transactions = body.get('removed_transactions', [])
         for rt in removed_transactions:
