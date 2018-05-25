@@ -67,5 +67,50 @@ class Transaction(models.Model):
     categories = models.ManyToManyField(Category)
     date = models.DateField(null=True)
     location = models.ForeignKey(Location, on_delete=models.CASCADE)
-    name = models.CharField(max_length=255, null=True)
+    name = models.TextField(null=True)
     pending = models.BooleanField()
+    rule_set = models.ForeignKey('RuleSet', null=True, on_delete=models.SET_NULL)
+
+class RuleSet(models.Model):
+    name = models.CharField(max_length=100)
+    item = models.ForeignKey(Item, on_delete=models.CASCADE)
+
+class NameRule(models.Model):
+    rule_set = models.ForeignKey(RuleSet, on_delete=models.CASCADE)
+    operator = models.CharField(max_length=20, choices=(
+        ('CONTAINS', 'contains (case sensitive)'),
+        ('ICONTAINS', 'icontains (case insensitive)'),
+        ('EXACT', 'exact (case sensitive)'),
+        ('IEXACT', 'iexact (case insensitive)'),
+        ('STARTSWITH', 'startswith (case sensitive)'),
+        ('ISTARTSWITH', 'istartswith (case insensitive)'),
+        ('ENDSWITH', 'endswith (case sensitive)'),
+        ('IENDSWITH', 'iendswith (case insensitive)')))
+    value = models.CharField(max_length=255)
+
+class AmountRule(models.Model):
+    rule_set = models.ForeignKey(RuleSet, on_delete=models.CASCADE)
+    operator = models.CharField(max_length=20, choices=(
+        ('EQ', '='),
+        ('GT', '>'),
+        ('GTE', '≥'),
+        ('LT', '<'),
+        ('LTE', '≤')))
+    value = models.IntegerField()
+
+class DateRule(models.Model):
+    rule_set = models.ForeignKey(RuleSet, on_delete=models.CASCADE)
+    repeats_every_num = models.IntegerField(default=1)
+    repeats_every_type = models.CharField(max_length=20, choices=(
+        ('DAY', 'day'),
+        ('WEEK', 'week'),
+        ('MONTH', 'month')))
+    day_of_week = models.IntegerField(null=True, blank=True, choices=(
+        (1, 'Sunday'),
+        (2, 'Monday'),
+        (3, 'Tuesday'),
+        (4, 'Wednesday'),
+        (5, 'Thursday'),
+        (6, 'Friday'),
+        (7, 'Saturday')))
+    day_of_month= models.IntegerField(null=True, blank=True)

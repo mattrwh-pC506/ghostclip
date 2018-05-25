@@ -5,7 +5,9 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django.conf import settings
 
-from .models import Family, User, Item, Transaction, Location, Category, Account
+from .models import (
+        Family, User, Item, Transaction, Location, Category, Account,
+        RuleSet, NameRule, AmountRule, DateRule)
 
 @admin.register(Family)
 class FamilyAdmin(admin.ModelAdmin):
@@ -67,3 +69,20 @@ class CategoryAdmin(admin.ModelAdmin):
 @admin.register(Account)
 class AccountAdmin(admin.ModelAdmin):
     list_display = ('name', 'mask', 'subtype',)
+
+@admin.register(RuleSet)
+class RuleSetAdmin(admin.ModelAdmin):
+    pass
+
+@admin.register(NameRule)
+class NameRuleAdmin(admin.ModelAdmin):
+    pass
+
+@admin.register(AmountRule)
+class AmountRuleAdmin(admin.ModelAdmin):
+    pass
+
+@admin.register(DateRule)
+class DateRuleAdmin(admin.ModelAdmin):
+    pass
+
