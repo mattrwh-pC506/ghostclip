@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User, AbstractUser
+from dateutil import relativedelta
+import datetime
 
 
 class Family(models.Model):
@@ -99,16 +101,18 @@ class NameRule(models.Model):
     value = models.CharField(max_length=255)
 
     matchers = {
-        'CONTAINS': lambda name, value: name in value,
-        'EXACT': lambda name, value: name == value,
-        'STARTSWITH': lambda name, value: value.startsWith(name),
-        'ENDSWITH': lambda name, value: value.endsWith(name),
+        'CONTAINS': lambda name, value: value in name,
+        'EXACT': lambda name, value: value == name,
+        'STARTSWITH': lambda name, value: name.startswith(value),
+        'ENDSWITH': lambda name, value: name.endswith(value),
     }
 
     def matches(self, transaction_name):
-        value = self.value.lower()
         name = transaction_name.lower()
-        return matchers.get(self.operator, lambda: False)(name, value)
+        value = self.value.lower()
+        matcher_predicate = self.matchers.get(
+            self.operator, lambda x, y: False)
+        return matcher_predicate(name, value)
 
 
 class AmountRule(models.Model):
@@ -131,28 +135,61 @@ class AmountRule(models.Model):
         'LTE': lambda amount, value: amount <= value,
     }
 
-    def matches(self, amount):
-        return matchers.get(self.operator, lambda: False)(amount, self.value)
+    def matches(self, transaction_amount):
+        matcher_predicate = self.matchers.get(
+            self.operator, lambda x, y: False)
+        return matcher_predicate(transaction_amount, self.value)
 
 
 class DateRule(models.Model):
     rule_set = models.ForeignKey(RuleSet, on_delete=models.CASCADE)
     repeats_every_num = models.IntegerField(default=1)
+    starting_date = models.DateField()
+    day_range_buffer = models.IntegerField(default=0)
     TYPE_CHOICES = (
         ('DAY', 'day'),
-        ('WEEK', 'week'),
         ('MONTH', 'month'),
     )
     repeats_every_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
-    DAYS_OF_WEEK = (
-        (1, 'Sunday'),
-        (2, 'Monday'),
-        (3, 'Tuesday'),
-        (4, 'Wednesday'),
-        (5, 'Thursday'),
-        (6, 'Friday'),
-        (7, 'Saturday'),
-    )
-    day_of_week = models.IntegerField(
-        null=True, blank=True, choices=DAYS_OF_WEEK)
-    day_of_month = models.IntegerField(null=True, blank=True)
+
+    def within_days_buffer(self, days_from_last, days_to_next):
+        return days_from_last <= self.day_range_buffer or days_to_next <= self.day_range_buffer
+
+    def match_repeating_day(self, transaction_date):
+        delta = transaction_date - self.starting_date
+        days_from_last = delta.days % self.repeats_every_num
+        days_to_next = self.repeats_every_num - days_from_last
+        return self.within_days_buffer(days_from_last, days_to_next)
+
+    def match_repeating_month(self, transaction_date):
+        delta = relativedelta.relativedelta(
+            transaction_date, self.starting_date)
+        months_from_last = delta.months % self.repeats_every_num
+        months_to_next = self.repeats_every_num - months_from_last
+        within_buffer_range = False
+        last_repetition = transaction_date - \
+            datetime.timedelta(days=delta.days)
+        next_repetition = last_repetition + \
+            relativedelta.relativedelta(months=+1)
+
+        last_rep_days_ago = (
+            transaction_date - last_repetition).days
+        next_repetition_days_from_now = (
+            next_repetition - transaction_date).days
+        if (months_from_last <= 1):
+            if last_rep_days_ago < next_repetition_days_from_now:
+                within_buffer_range = last_rep_days_ago <= self.day_range_buffer
+            elif last_rep_days_ago >= next_repetition_days_from_now:
+                within_buffer_range = next_repetition_days_from_now <= self.day_range_buffer
+        elif ((not within_buffer_range) and months_to_next <= 1):
+            days_to_next = next_repetition - transaction_date
+            within_buffer_range = days_to_next.days <= self.day_range_buffer
+        return within_buffer_range
+
+    def matches(self, transaction_date):
+        if (self.repeats_every_type == 'DAY'):
+            return self.match_repeating_day(transaction_date)
+        elif (self.repeats_every_type == 'MONTH'):
+            return self.match_repeating_month(transaction_date)
+        else:
+            return False

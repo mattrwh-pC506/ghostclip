@@ -1,6 +1,3 @@
-import pytest
-from django.contrib.auth import get_user_model
-import main.signals
 from main.models import (
     Family, User, Item, Transaction,
     Location, Category, Account, RuleSet,

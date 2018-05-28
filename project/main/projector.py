@@ -8,7 +8,7 @@ def build_rule_set_map(field_value, rules, rule_sets):
 
 
 def get_rule_sets_with_name_matches(item, name):
-    rules = NameRule.objects.filter(item=item)
+    rules = NameRule.objects.filter(rule_set__item=item)
     return build_rule_set_map(name, rules, {})
 
 
@@ -22,6 +22,10 @@ def add_date_matches(rule_sets, date):
     return build_rule_set_map(date, rules, rule_sets)
 
 
+def get_best_match(sets):
+    return max(sets.keys(), key=(lambda k: len(sets[k])))
+
+
 def add_to_matching_rule_set_if_any(transaction):
     item = transaction.account.item
     sets = get_rule_sets_with_name_matches(item, transaction.name)
@@ -29,7 +33,5 @@ def add_to_matching_rule_set_if_any(transaction):
     sets = add_date_matches(sets, transaction.date)
 
     if sets:
-        match = max(sets.keys(), key=(lambda k: len(sets[k])))
+        match = get_best_match(sets)
         Transaction.objects.filter(pk=transaction.pk).update(rule_set=match)
-
-        # TODO: create projections in gcal / models
