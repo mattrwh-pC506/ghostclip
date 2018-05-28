@@ -89,12 +89,13 @@ class RuleSet(models.Model):
 
 class NameRule(models.Model):
     rule_set = models.ForeignKey(RuleSet, on_delete=models.CASCADE)
-    operator = models.CharField(max_length=20, choices=(
+    OPERATOR_CHOICES = (
         ('CONTAINS', 'contains (case sensitive)'),
         ('EXACT', 'exact (case sensitive)'),
         ('STARTSWITH', 'startswith (case sensitive)'),
         ('ENDSWITH', 'endswith (case sensitive)'),
-    ))
+    )
+    operator = models.CharField(max_length=20, choices=OPERATOR_CHOICES)
     value = models.CharField(max_length=255)
 
     matchers = {
@@ -112,13 +113,14 @@ class NameRule(models.Model):
 
 class AmountRule(models.Model):
     rule_set = models.ForeignKey(RuleSet, on_delete=models.CASCADE)
-    operator = models.CharField(max_length=20, choices=(
+    OPERATOR_CHOICES = (
         ('EQ', '='),
         ('GT', '>'),
         ('GTE', '≥'),
         ('LT', '<'),
         ('LTE', '≤'),
-    ))
+    )
+    operator = models.CharField(max_length=20, choices=OPERATOR_CHOICES)
     value = models.IntegerField()
 
     matchers = {
@@ -136,12 +138,13 @@ class AmountRule(models.Model):
 class DateRule(models.Model):
     rule_set = models.ForeignKey(RuleSet, on_delete=models.CASCADE)
     repeats_every_num = models.IntegerField(default=1)
-    repeats_every_type = models.CharField(max_length=20, choices=(
+    TYPE_CHOICES = (
         ('DAY', 'day'),
         ('WEEK', 'week'),
         ('MONTH', 'month'),
-    ))
-    day_of_week = models.IntegerField(null=True, blank=True, choices=(
+    )
+    repeats_every_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    DAYS_OF_WEEK = (
         (1, 'Sunday'),
         (2, 'Monday'),
         (3, 'Tuesday'),
@@ -149,5 +152,7 @@ class DateRule(models.Model):
         (5, 'Thursday'),
         (6, 'Friday'),
         (7, 'Saturday'),
-    ))
+    )
+    day_of_week = models.IntegerField(
+        null=True, blank=True, choices=DAYS_OF_WEEK)
     day_of_month = models.IntegerField(null=True, blank=True)

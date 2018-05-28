@@ -2,7 +2,7 @@ from .models import Transaction, NameRule, AmountRule, DateRule
 
 
 def build_rule_set_map(field_value, rules, rule_sets):
-    for r in [rule for rule in rules if rule.matches(field_value)]
+    for r in [rule for rule in rules if rule.matches(field_value)]:
         rule_sets[r.rule_set] = [*rule_sets.get(r.rule_set, []), r]
     return rule_sets
 

@@ -27,51 +27,51 @@ SECRET_KEY = '8pbx66+cm-s@b7w-3d7!s#ris-dl^ypb-2lg9-9pi6!xg6c(9-'
 DEBUG = True
 
 ALLOWED_HOSTS = [
-        'ghostclip.herokuapp.com',
-        'localhost',
-        ]
+    'ghostclip.herokuapp.com',
+    'localhost',
+]
 
 
 # Application definition
 
 INSTALLED_APPS = [
-        'django.contrib.admin',
-        'django.contrib.auth',
-        'django.contrib.contenttypes',
-        'django.contrib.sessions',
-        'django.contrib.messages',
-        'django.contrib.staticfiles',
-        'django_rq',
-        'main.apps.MainConfig',
-        ]
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'django_rq',
+    'main.apps.MainConfig',
+]
 
 MIDDLEWARE = [
-        'django.middleware.security.SecurityMiddleware',
-        'django.contrib.sessions.middleware.SessionMiddleware',
-        'django.middleware.common.CommonMiddleware',
-        # 'django.middleware.csrf.CsrfViewMiddleware',
-        'django.contrib.auth.middleware.AuthenticationMiddleware',
-        'django.contrib.messages.middleware.MessageMiddleware',
-        'django.middleware.clickjacking.XFrameOptionsMiddleware',
-        ]
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    # 'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
 
 ROOT_URLCONF = 'project.urls'
 
 TEMPLATES = [
-        {
-            'BACKEND': 'django.template.backends.django.DjangoTemplates',
-            'DIRS': [],
-            'APP_DIRS': True,
-            'OPTIONS': {
-                'context_processors': [
-                    'django.template.context_processors.debug',
-                    'django.template.context_processors.request',
-                    'django.contrib.auth.context_processors.auth',
-                    'django.contrib.messages.context_processors.messages',
-                    ],
-                },
-            },
-        ]
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
 
 WSGI_APPLICATION = 'project.wsgi.application'
 
@@ -79,43 +79,42 @@ WSGI_APPLICATION = 'project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
 
-if os.getenv('APP_ENV') == 'local':
+if os.getenv('APP_ENV') in ['local', 'test']:
     DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.sqlite3',
-                'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-                }
-            }
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        }
+    }
 else:
     DATABASES = {
-            'default': {
-                'ENGINE': os.getenv('DB_ENGINE'),
-                'NAME': os.getenv('DB_NAME'),
-                'USER': os.getenv('DB_USER'),
-                'PASSWORD': os.getenv('DB_PASSWORD'),
-                'HOST': os.getenv('DB_HOST'),
-                'PORT': os.getenv('DB_PORT'),
-                }
-            }
-
+        'default': {
+            'ENGINE': os.getenv('DB_ENGINE'),
+            'NAME': os.getenv('DB_NAME'),
+            'USER': os.getenv('DB_USER'),
+            'PASSWORD': os.getenv('DB_PASSWORD'),
+            'HOST': os.getenv('DB_HOST'),
+            'PORT': os.getenv('DB_PORT'),
+        }
+    }
 
     # Password validation
 # https://docs.djangoproject.com/en/2.0/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-        {
-            'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-            },
-        {
-            'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-            },
-        {
-            'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-            },
-        {
-            'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-            },
-        ]
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+]
 
 # custom User Model
 AUTH_USER_MODEL = 'main.User'
@@ -149,23 +148,23 @@ PLAID_ENV = os.getenv('PLAID_ENV', 'sandbox')
 
 APP_ENV = os.getenv('APP_ENV', 'local')
 WEBHOOK_BASE_URL = {
-        'local': 'https://mw-test-requestbin.herokuapp.com/1epgsnj1',
-        'dev': 'https://ghostclip.herokuapp.com',
-        }.get(APP_ENV)
+    'local': 'https://mw-test-requestbin.herokuapp.com/1epgsnj1',
+    'dev': 'https://ghostclip.herokuapp.com',
+}.get(APP_ENV)
 
 RQ_QUEUES = {
-        'default': {
-            'URL': os.getenv('REDISTOGO_URL', 'redis://localhost:6379/0'),
-            'DEFAULT_TIMEOUT': 500,
-            },
-        'high': {
-            'URL': os.getenv('REDISTOGO_URL', 'redis://localhost:6379/0'),
-            'DEFAULT_TIMEOUT': 500,
-            },
-        'low': {
-            'URL': os.getenv('REDISTOGO_URL', 'redis://localhost:6379/0'),
-            'DEFAULT_TIMEOUT': 500,
-            }
-        }
+    'default': {
+        'URL': os.getenv('REDISTOGO_URL', 'redis://localhost:6379/0'),
+        'DEFAULT_TIMEOUT': 500,
+    },
+    'high': {
+        'URL': os.getenv('REDISTOGO_URL', 'redis://localhost:6379/0'),
+        'DEFAULT_TIMEOUT': 500,
+    },
+    'low': {
+        'URL': os.getenv('REDISTOGO_URL', 'redis://localhost:6379/0'),
+        'DEFAULT_TIMEOUT': 500,
+    }
+}
 
-RQ_EXCEPTION_HANDLERS = [] # If you need custom exception handlers
+RQ_EXCEPTION_HANDLERS = []  # If you need custom exception handlers
