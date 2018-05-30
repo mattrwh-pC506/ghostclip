@@ -80,7 +80,7 @@ class AccountAdmin(admin.ModelAdmin):
 
 @admin.register(RuleSet)
 class RuleSetAdmin(admin.ModelAdmin):
-    list_display = ('item', 'name',)
+    list_display = ('name', 'item',)
 
 
 @admin.register(NameRule)
