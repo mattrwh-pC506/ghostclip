@@ -88,6 +88,9 @@ class RuleSet(models.Model):
     name = models.CharField(max_length=100)
     item = models.ForeignKey(Item, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return self.name
+
 
 class NameRule(models.Model):
     rule_set = models.ForeignKey(RuleSet, on_delete=models.CASCADE)

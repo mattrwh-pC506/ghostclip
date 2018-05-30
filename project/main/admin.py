@@ -6,12 +6,14 @@ from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django.conf import settings
 
 from .models import (
-        Family, User, Item, Transaction, Location, Category, Account,
-        RuleSet, NameRule, AmountRule, DateRule)
+    Family, User, Item, Transaction, Location, Category, Account,
+    RuleSet, NameRule, AmountRule, DateRule)
+
 
 @admin.register(Family)
 class FamilyAdmin(admin.ModelAdmin):
     pass
+
 
 @admin.register(Item)
 class ItemAdmin(admin.ModelAdmin):
@@ -27,6 +29,7 @@ class ItemAdmin(admin.ModelAdmin):
         ec['transactions_webhook'] = webhook_url
 
         return super().changeform_view(request, object_id, form_url, extra_context=ec)
+
 
 class UserChangeForm(forms.ModelForm):
     password = ReadOnlyPasswordHashField()
@@ -47,42 +50,55 @@ class UserAdmin(BaseUserAdmin):
     ordering = ('family', 'username', 'email',)
     filter_horizontal = ()
     fieldsets = (
-            (None, {'fields': ('family',)}),
-            *BaseUserAdmin.fieldsets,
-            )
+        (None, {'fields': ('family',)}),
+        *BaseUserAdmin.fieldsets,
+    )
 
     admin.site.unregister(Group)
+
 
 @admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):
     list_display = ('account', 'amount', 'date', 'name', 'pending',)
     ordering = ('date', 'pending',)
 
+
 @admin.register(Location)
 class LocationAdmin(admin.ModelAdmin):
     pass
+
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('token',)
 
+
 @admin.register(Account)
 class AccountAdmin(admin.ModelAdmin):
     list_display = ('name', 'mask', 'subtype',)
 
+
 @admin.register(RuleSet)
 class RuleSetAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('item', 'name',)
+
 
 @admin.register(NameRule)
 class NameRuleAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('rule_set', 'operator', 'value',)
+
 
 @admin.register(AmountRule)
 class AmountRuleAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('rule_set', 'operator', 'value',)
+
 
 @admin.register(DateRule)
 class DateRuleAdmin(admin.ModelAdmin):
-    pass
-
+    list_display = (
+        'rule_set',
+        'repeats_every_num',
+        'repeats_every_type',
+        'starting_date',
+        'day_range_buffer',
+    )
