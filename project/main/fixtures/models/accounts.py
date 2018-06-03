@@ -2,7 +2,7 @@ import pytest
 import factory
 from faker import Factory as FakerFactory
 import random
-from main.models import Account
+from main.models.transaction import Account
 
 faker = FakerFactory.create()
 faker.seed(1234)

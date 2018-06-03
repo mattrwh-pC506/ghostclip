@@ -1,7 +1,7 @@
 import pytest
 import factory
 from faker import Factory as FakerFactory
-from main.models import Family
+from main.models.user import Family
 
 faker = FakerFactory.create()
 faker.seed(1234)

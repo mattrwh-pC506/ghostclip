@@ -2,7 +2,7 @@ import pytest
 import factory
 from faker import Factory as FakerFactory
 
-from main.models import Location
+from main.models.transaction import Location
 
 faker = FakerFactory.create()
 faker.seed(1234)

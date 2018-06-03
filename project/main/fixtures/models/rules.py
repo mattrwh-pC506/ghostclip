@@ -1,7 +1,7 @@
 import pytest
 import factory
 from faker import Factory as FakerFactory
-from main.models import NameRule, AmountRule, DateRule
+from main.models.rules import NameRule, AmountRule, DateRule
 import random
 
 faker = FakerFactory.create()

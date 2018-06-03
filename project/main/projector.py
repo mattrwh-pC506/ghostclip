@@ -1,4 +1,5 @@
-from .models import Transaction, NameRule, AmountRule, DateRule
+from main.models.transaction import Transaction
+from main.models.rules import NameRule, AmountRule, DateRule
 
 
 def build_rule_set_map(field_value, rules, rule_sets):

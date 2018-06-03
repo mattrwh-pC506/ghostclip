@@ -2,7 +2,7 @@ import pytest
 import factory
 from faker import Factory as FakerFactory
 
-from main.models import RuleSet
+from main.models.rules import RuleSet
 
 faker = FakerFactory.create()
 faker.seed(1234)

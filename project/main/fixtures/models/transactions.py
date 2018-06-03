@@ -3,7 +3,7 @@ import factory
 from django.db.models.signals import post_save, post_delete
 from faker import Factory as FakerFactory
 import random
-from main.models import Transaction
+from main.models.transaction import Transaction
 
 faker = FakerFactory.create()
 faker.seed(1234)

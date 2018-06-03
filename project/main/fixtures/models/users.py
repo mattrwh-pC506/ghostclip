@@ -2,7 +2,7 @@ import pytest
 import factory
 from faker import Factory as FakerFactory
 from django.contrib.auth import get_user_model
-from main.models import User
+from main.models.user import User
 
 faker = FakerFactory.create()
 faker.seed(1234)

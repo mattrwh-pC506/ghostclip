@@ -5,9 +5,10 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django.conf import settings
 
-from .models import (
-    Family, User, Item, Transaction, Location, Category, Account,
-    RuleSet, NameRule, AmountRule, DateRule)
+from main.models.user import User, Family
+from main.models.item import Item
+from main.models.transaction import Transaction, Location, Category, Account
+from main.models.rules import RuleSet, NameRule, AmountRule, DateRule
 
 
 @admin.register(Family)
@@ -80,7 +81,8 @@ class AccountAdmin(admin.ModelAdmin):
 
 @admin.register(RuleSet)
 class RuleSetAdmin(admin.ModelAdmin):
-    list_display = ('name', 'item',)
+    list_display = ('name', 'item', 'last_transaction_name',
+                    'last_transaction_amount', 'predicted_next_transaction_date',)
 
 
 @admin.register(NameRule)

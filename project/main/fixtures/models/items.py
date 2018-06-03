@@ -2,7 +2,7 @@ import pytest
 import factory
 from faker import Factory as FakerFactory
 
-from main.models import Item
+from main.models.item import Item
 
 faker = FakerFactory.create()
 faker.seed(1234)

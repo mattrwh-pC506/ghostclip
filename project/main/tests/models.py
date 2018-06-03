@@ -1,8 +1,7 @@
-from main.models import (
-    Family, User, Item, Transaction,
-    Location, Category, Account, RuleSet,
-    NameRule, AmountRule, DateRule
-)
+from main.models.user import User, Family
+from main.models.item import Item
+from main.models.transaction import Transaction, Location, Category, Account
+from main.models.rules import RuleSet, NameRule, AmountRule, DateRule
 
 
 def assert_created(model, instance):
