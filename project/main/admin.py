@@ -7,7 +7,7 @@ from django.conf import settings
 
 from main.models.user import User, Family
 from main.models.item import Item
-from main.models.transaction import Transaction, Location, Category, Account
+from main.models.transaction import Transaction, Account
 from main.models.rules import RuleSet, NameRule, AmountRule, DateRule
 
 
@@ -62,16 +62,6 @@ class UserAdmin(BaseUserAdmin):
 class TransactionAdmin(admin.ModelAdmin):
     list_display = ('account', 'amount', 'date', 'name', 'pending',)
     ordering = ('date', 'pending',)
-
-
-@admin.register(Location)
-class LocationAdmin(admin.ModelAdmin):
-    pass
-
-
-@admin.register(Category)
-class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('token',)
 
 
 @admin.register(Account)

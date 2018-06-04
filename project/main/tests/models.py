@@ -1,6 +1,6 @@
 from main.models.user import User, Family
 from main.models.item import Item
-from main.models.transaction import Transaction, Location, Category, Account
+from main.models.transaction import Transaction, Account
 from main.models.rules import RuleSet, NameRule, AmountRule, DateRule
 
 
@@ -26,14 +26,6 @@ def test_create_item(sample_item):
 
 def test_create_transaction(sample_transaction):
     assert_created(Transaction, sample_transaction)
-
-
-def test_create_location(sample_location):
-    assert_created(Location, sample_location)
-
-
-def test_create_category(sample_category):
-    assert_created(Category, sample_category)
 
 
 def test_create_account(sample_account):

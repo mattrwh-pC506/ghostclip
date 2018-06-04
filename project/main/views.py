@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from django.conf import settings
 import plaid
 from main.models.item import Item
-from main.models.transaction import Account, Category, Location, Transaction
+from main.models.transaction import Account, Transaction
 
 from django_rq import job
 
@@ -65,46 +65,7 @@ def create_and_update_transactions(start_date, end_date, item):
             tran.date = datetime.datetime.strptime(
                 transaction['date'], '%Y-%m-%d').date()
 
-            location = transaction.get('location', {})
-            loc = Location.objects.filter(
-                address=location['address'],
-                city=location['city'],
-                state=location['state'],
-                zip=location['zip'],
-                lat=location['lat'],
-                lon=location['lon'],
-            ).first()
-            if not loc:
-                loc = Location(
-                    address=location['address'],
-                    city=location['city'],
-                    state=location['state'],
-                    zip=location['zip'],
-                    lat=location['lat'],
-                    lon=location['lon'],
-                )
-                loc.save()
-
-            tran.location = loc
             tran.save()
-
-            categories = list(enumerate(transaction.get('category', [])))
-            for index, category in categories:
-                cat = Category.objects.filter(pk=category).first()
-                if not cat:
-                    cat = Category(token=category)
-                    parent = Category.objects.filter(
-                        pk=categories[index][1]).first()
-                    if parent:
-                        cat.parent = parent
-                    cat.save()
-
-                existing_cat_rel = Transaction.objects.filter(
-                    pk=tran.pk,
-                    categories__pk=cat.pk)
-
-                if not existing_cat_rel:
-                    tran.categories.add(cat)
 
             ptid = transaction['pending_transaction_id']
             if ptid:

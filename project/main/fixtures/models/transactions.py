@@ -10,7 +10,7 @@ faker.seed(1234)
 
 
 @pytest.fixture
-def transaction_factory(db, account_factory, location_factory):
+def transaction_factory(db, account_factory):
     class TransactionFactory(factory.django.DjangoModelFactory):
         class Meta:
             model = Transaction
@@ -20,19 +20,10 @@ def transaction_factory(db, account_factory, location_factory):
         name = 'transaction1name'
         calendar_event_id = faker.pystr()
         account = factory.SubFactory(account_factory)
-        location = factory.SubFactory(location_factory)
         amount = faker.pyfloat(
             left_digits=random.randint(1, 3), right_digits=2, positive=faker.pybool())
         date = faker.past_date()
         pending = faker.pybool()
-
-    @factory.post_generation
-    def categories(self, create, extracted, **kwargs):
-        if not create:
-            return
-        if extracted:
-            for category in extracted:
-                self.categories.add(category)
 
     return TransactionFactory
 
