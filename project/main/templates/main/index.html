@@ -100,7 +100,7 @@
     <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
     <script>
       (function($) {
-        var handler = Plaid.create({
+        var config = {
           apiVersion: 'v2',
           clientName: 'Plaid Walkthrough Demo',
           env: '{{ plaid_environment }}',
@@ -111,7 +111,14 @@
               console.log(res)
             });
           },
-        });
+        };
+        var ptoken = '{{ plaid_item_public_token }}';
+        console.log('token', ptoken);
+        if (ptoken) {
+          config.token = ptoken;
+        }
+
+        var handler = Plaid.create(config);
 
         $('#link-btn').on('click', function(e) {
           handler.open();

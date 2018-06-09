@@ -28,7 +28,7 @@
     <ul class="object-tools">
       <li>
         <a id="link-btn" href="javascript: void(0)" class="addlink">
-          Connect Bank Accounts
+          {{ plaid_item_public_token|yesno:"Update Bank Credentials, Add Bank Credentials" }}
         </a>
       </li>
     </ul>
@@ -97,8 +97,9 @@
 <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
 <script>
   (function($) {
-    console.log('{{plaid_environment}}')
-      var handler = Plaid.create({
+    var ptoken = '{{ plaid_item_public_token }}';
+    console.log(ptoken)
+      var config = {
         apiVersion: 'v2',
         clientName: 'GhostClip',
         env: '{{ plaid_environment }}',
@@ -106,13 +107,21 @@
         key: '{{ plaid_public_key }}',
         webhook: '{{ transactions_webhook }}',
         onSuccess: function(public_token) {
-          let protocol = window.location.protocol;
-          let base_url = window.location.host;
-          $.post('/main/create_item', {public_token: public_token}, function(res) {
-            window.location.href = `${protocol}//${base_url}/admin/main/item/${res.item_id}/change`;
-          });
+          if (!ptoken) {
+            let protocol = window.location.protocol;
+            let base_url = window.location.host;
+            $.post('/main/create_item', {public_token: public_token}, function(res) {
+              window.location.href = `${protocol}//${base_url}/admin/main/item/${res.item_id}/change`;
+            });
+          }
         },
-      });
+      };
+
+    if (ptoken) {
+      config.token = ptoken;
+    }
+
+    var handler = Plaid.create(config);
 
     $('#link-btn').on('click', function(e) {
       handler.open();
@@ -120,3 +129,5 @@
   })(jQuery);
 </script>
 {% endblock %}
+
+

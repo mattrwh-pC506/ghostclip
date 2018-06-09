@@ -4,11 +4,17 @@ from django.contrib.auth.models import Group
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django.conf import settings
+from django.conf import settings
+
+import plaid
 
 from main.models.user import User, Family
 from main.models.item import Item
 from main.models.transaction import Transaction, Account
 from main.models.rules import RuleSet, NameRule, AmountRule, DateRule
+
+client = plaid.Client(client_id=settings.PLAID_CLIENT_ID, secret=settings.PLAID_SECRET,
+                      public_key=settings.PLAID_PUBLIC_KEY, environment=settings.PLAID_ENV)
 
 
 @admin.register(Family)
@@ -22,6 +28,13 @@ class ItemAdmin(admin.ModelAdmin):
         ec = extra_context or {}
         ec['plaid_public_key'] = settings.PLAID_PUBLIC_KEY
         ec['plaid_environment'] = settings.PLAID_ENV
+
+        if object_id:
+            ci = Item.objects.get(pk=object_id)
+            new_ptoken_response = client.Item.public_token.create(
+                ci.access_token)
+            public_token = new_ptoken_response['public_token']
+            ec['plaid_item_public_token'] = public_token
 
         webhook_url = settings.WEBHOOK_BASE_URL
         if settings.APP_ENV != 'local':

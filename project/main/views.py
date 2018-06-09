@@ -1,6 +1,7 @@
 import os
 import json
 import datetime
+from statistics import mean
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.conf import settings
@@ -97,7 +98,24 @@ def index(request):
         'plaid_environment': settings.PLAID_ENV,
         'linked_items': items,
     }
+
     return render(request, 'main/index.html', context)
+
+
+def search_transactions(request):
+    matches = Transaction.objects.filter(
+        name__icontains=request.GET.get('q')).order_by('-date')
+    matches = [{'name': t.name, 'date': t.date, 'amount': t.amount}
+               for t in matches]
+    amounts = [tr['amount'] for tr in matches]
+    avg = mean(amounts)
+    low = min(amounts)
+    high = max(amounts)
+    body = {
+        'stats': {'avg': avg, 'low': low, 'high': high},
+        'matches': matches,
+    }
+    return JsonResponse(body, json_dumps_params={'indent': 2})
 
 
 def create_item(request):
