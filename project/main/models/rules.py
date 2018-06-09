@@ -45,6 +45,7 @@ class NameRule(models.Model):
 
 class AmountRule(models.Model):
     rule_set = models.ForeignKey(RuleSet, on_delete=models.CASCADE)
+
     OPERATOR_CHOICES = (
         ('EQ', '='),
         ('GT', '>'),
@@ -53,7 +54,16 @@ class AmountRule(models.Model):
         ('LTE', '≤'),
     )
     operator = models.CharField(max_length=20, choices=OPERATOR_CHOICES)
-    value = models.IntegerField()
+
+    TRANSACTION_TYPE_CHOICES = (
+        ('LOAD', 'load'),
+        ('DEBIT', 'debit'),
+    )
+    transaction_type = models.CharField(
+        max_length=20, choices=TRANSACTION_TYPE_CHOICES, default='DEBIT')
+
+    value = models.DecimalField(
+        max_digits=20, decimal_places=2, null=True, blank=True)
 
     matchers = {
         'EQ': lambda amount, value: amount == value,
@@ -64,9 +74,15 @@ class AmountRule(models.Model):
     }
 
     def matches(self, transaction_amount):
+        if self.transaction_type == 'DEBIT' and transaction_amount > 0:
+            return False
+
+        if self.transaction_type == 'LOAD' and transaction_amount < 0:
+            return False
+
         matcher_predicate = self.matchers.get(
             self.operator, lambda x, y: False)
-        return matcher_predicate(transaction_amount, self.value)
+        return matcher_predicate(abs(transaction_amount), abs(self.value))
 
 
 class DateRule(models.Model):
