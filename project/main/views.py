@@ -1,7 +1,7 @@
 import os
 import json
 import datetime
-from statistics import mean
+from statistics import mean, mode
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.conf import settings
@@ -108,11 +108,24 @@ def search_transactions(request):
     matches = [{'name': t.name, 'date': t.date, 'amount': t.amount}
                for t in matches]
     amounts = [tr['amount'] for tr in matches]
-    avg = mean(amounts)
-    low = min(amounts)
-    high = max(amounts)
+    avg_amount = mean(amounts)
+    low_amount = min(amounts)
+    high_amount = max(amounts)
+
+    dates = [tr['date'] for tr in matches]
+    days = [date.day for date in dates]
+    first_date = min(dates)
+    low_day = min(days)
+    most_frequent_day = None
+    try:
+        most_frequent_days = mode(days)
+    except:
+        pass
+    high_day = max(days)
+
     body = {
-        'stats': {'avg': avg, 'low': low, 'high': high},
+        'amountStats': {'avg': avg_amount, 'low': low_amount, 'high': high_amount},
+        'dateStats': {'mode': most_frequent_day, 'low': low_day, 'high': high_day, 'first': first_date},
         'matches': matches,
     }
     return JsonResponse(body, json_dumps_params={'indent': 2})

@@ -26,4 +26,5 @@ class Command(BaseCommand):
             rs.predicted_next_transaction_date = calculate_next_date(
                 transactions, last_transaction)
             rs.last_transaction_name = last_transaction.name
+            rs.last_transaction_amount = last_transaction.amount
             rs.save()

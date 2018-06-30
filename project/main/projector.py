@@ -18,21 +18,22 @@ def add_amount_matches(rule_sets, amount):
     return build_rule_set_map(amount, rules, rule_sets)
 
 
-def add_date_matches(rule_sets, date):
-    rules = DateRule.objects.filter(rule_set__in=list(rule_sets.keys()))
-    return build_rule_set_map(date, rules, rule_sets)
-
-
-def get_best_match(sets):
-    return max(sets.keys(), key=(lambda k: len(sets[k])))
+def get_best_match_by_date(sets, date):
+    rules = DateRule.objects.filter(rule_set__in=list(sets.keys()))
+    date_set_matches = build_rule_set_map(date, rules, {})
+    if date_set_matches:
+        return max(date_set_matches.keys(), key=(lambda k: len(date_set_matches[k])))
+    else:
+        return None
 
 
 def add_to_matching_rule_set_if_any(transaction):
     item = transaction.account.item
     sets = get_rule_sets_with_name_matches(item, transaction.name)
     sets = add_amount_matches(sets, transaction.amount)
-    sets = add_date_matches(sets, transaction.date)
 
     if sets:
-        match = get_best_match(sets)
-        Transaction.objects.filter(pk=transaction.pk).update(rule_set=match)
+        match = get_best_match_by_date(sets, transaction.date)
+        if match:
+            Transaction.objects.filter(
+                pk=transaction.pk).update(rule_set=match)
