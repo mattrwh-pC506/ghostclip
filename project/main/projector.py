@@ -27,13 +27,22 @@ def get_best_match_by_date(sets, date):
         return None
 
 
+def recalculate_ruleset_latest_transaction(rs):
+    transactions = Transaction.object.filter(rule_set=rs)
+    last_transaction = transactions.order_by('-date').first()
+    rs.last_transaction_name = last_transaction.name
+    rs.last_transaction_amount = last_transaction.amount
+    rs.save()
+
+
 def add_to_matching_rule_set_if_any(transaction):
     item = transaction.account.item
     sets = get_rule_sets_with_name_matches(item, transaction.name)
     sets = add_amount_matches(sets, transaction.amount)
 
     if sets:
-        match = get_best_match_by_date(sets, transaction.date)
-        if match:
+        matching_rs = get_best_match_by_date(sets, transaction.date)
+        if matching_rs:
             Transaction.objects.filter(
-                pk=transaction.pk).update(rule_set=match)
+                pk=transaction.pk).update(rule_set=matching_rs)
+            recalculate_ruleset_latest_transaction(rs)

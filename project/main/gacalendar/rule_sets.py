@@ -1,6 +1,5 @@
 import os
 from datetime import timedelta
-import datetime
 from .ga import build_service
 
 

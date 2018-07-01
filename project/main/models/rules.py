@@ -1,6 +1,7 @@
 from django.db import models
 from dateutil import relativedelta
 import datetime
+from statistics import mode, StatisticsError
 from main.models.item import Item
 
 
@@ -15,6 +16,22 @@ class RuleSet(models.Model):
 
     def __str__(self):
         return self.name
+
+    def most_common_day(self):
+        ts = self.transactions.all()
+        if ts:
+            try:
+                return mode(t.date.day for t in ts)
+            except StatisticsError:
+                pass
+
+    def most_common_day_of_week(self):
+        ts = self.transactions.all()
+        if ts:
+            try:
+                return mode(t.date.weekday() for t in ts)
+            except StatisticsError:
+                pass
 
 
 class NameRule(models.Model):
@@ -87,6 +104,7 @@ class AmountRule(models.Model):
 
 class DateRule(models.Model):
     rule_set = models.ForeignKey(RuleSet, on_delete=models.CASCADE)
+    date_rule_info = models.OneToOneField(RuleSet, on_delete=models.CASCADE)
     repeats_every_num = models.IntegerField(default=1)
     starting_date = models.DateField()
     day_range_buffer = models.IntegerField(default=0)

@@ -3,14 +3,44 @@ from dateutil import relativedelta
 from statistics import mean
 from django.core.management.base import BaseCommand, CommandError
 from main.models import Transaction
+from main.gacalendar.rule_sets import (
+    create_rule_set_event,
+    patch_rule_set_event,
+    delete_rule_set_event)
+
+import django_rq
 
 
 def calculate_next_date(transactions, last_transaction):
-    avg_day = round(mean(t.date.day for t in transactions))
-    next_transaction_date = last_transaction.date + \
-        relativedelta.relativedelta(months=+1)
-    next_transaction_date.replace(day=avg_day)
+    date_to_check = last_transaction.date
+    rule_set = last_transaction.rule_set
+    date_rule = rule_set.date_rule_info
+    next_transaction_date = None
+
+    if date_rule.repeats_every_type == 'MONTH':
+        most_common_day = date_rule.most_common_day()
+        next_transaction_date = date_to_check + \
+            relativedelta.relativedelta(months=+date_rule.repeats_every_num)
+        next_transaction_date.replace(day=most_common_day)
+        weekday = next_transaction_date.weekday()
+        if weekday > 4 and weekday <= 6:
+            days_to_add = 7 - weekday
+            next_transaction_date = date_to_check + \
+                relativedelta.relativedelta(days=+days_to_add)
+    elif date_rule.repeats_every_type == 'DAY':
+        next_transaction_date = date_to_check + \
+            relativedelta.relativedelta(days=+date_rule.repeats_every_num)
+
+        if ((date_rule.repeats_every_num % 7) == 0)
+            most_common_weekday = rule_set.most_common_day_of_week()
+            next_transaction_date = closest_weekday_date(
+                next_transaction_date, most_common_weekday)
+
     return next_transaction_date
+
+
+def closest_weekday_date(date_to_check, weekday):
+    return [d for d in[date_to_check+timedelta(o-3) for o in range(7)] if weekday % 7 == d.weekday()][0]
 
 
 class Command(BaseCommand):
@@ -28,3 +58,8 @@ class Command(BaseCommand):
             rs.last_transaction_name = last_transaction.name
             rs.last_transaction_amount = last_transaction.amount
             rs.save()
+
+            if rs.calendar_event_id:
+                django_rq.enqueue(patch_rule_set_event, rs)
+            elif Transaction.objects.filter(rule_set=rs):
+                django_rq.enqueue(create_rule_set_event, rs)
