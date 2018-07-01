@@ -7,6 +7,8 @@ from main.gacalendar.transactions import (
     delete_transaction_event)
 from main.projector import add_to_matching_rule_set_if_any
 
+import django_rq
+
 
 @receiver(post_save, sender=Transaction)
 def transaction_saved(sender, instance, created, **kwargs):

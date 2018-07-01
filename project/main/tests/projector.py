@@ -80,7 +80,7 @@ def test_add_amount_matches(sample_item, starting_rule_sets, add_simple_operator
 
     sut = {rule_set: [] for rule_set in nrs}
     sut = get_rule_sets_with_name_matches(sample_item, 'abc123')
-    sut = add_amount_matches(sut, 5)
+    sut = add_amount_matches(sut, -5)
 
     for i, rule_set in enumerate(rs):
         assert len(sut[rule_set]) == (len(rs) - i)
@@ -104,7 +104,7 @@ def setup_date_tests(
             rs, nrs, 1, starting_date, day_range_buffer, repeats_every_num, repeats_every_type)
         sut = {rule_set: [] for rule_set in nrs}
         sut = get_rule_sets_with_name_matches(sample_item, 'abc123')
-        sut = add_amount_matches(sut, 5)
+        sut = add_amount_matches(sut, -5)
         sut = add_date_matches(sut, transaction_date)
         return rs, sut
 
@@ -120,9 +120,8 @@ def test_add_date_matches_for_recurring_month_with_three_day_buffer_after(setup_
         transaction_date=datetime.date(2018, 5, 3),
     )
 
+    assert len(sut.keys()) == 1
     assert len(sut[rs[0]]) == 3
-    assert len(sut[rs[1]]) == 2
-    assert len(sut[rs[2]]) == 2
 
 
 def test_add_date_matches_for_recurring_month_with_three_day_buffer_before(setup_date_tests):
@@ -134,9 +133,8 @@ def test_add_date_matches_for_recurring_month_with_three_day_buffer_before(setup
         transaction_date=datetime.date(2018, 4, 30),
     )
 
+    assert len(sut.keys()) == 1
     assert len(sut[rs[0]]) == 3
-    assert len(sut[rs[1]]) == 2
-    assert len(sut[rs[2]]) == 2
 
 
 def test_add_date_fails_to_match_for_recurring_month_when_after_buffer(setup_date_tests):
@@ -148,9 +146,7 @@ def test_add_date_fails_to_match_for_recurring_month_when_after_buffer(setup_dat
         transaction_date=datetime.date(2018, 5, 5),
     )
 
-    assert len(sut[rs[0]]) == 2
-    assert len(sut[rs[1]]) == 2
-    assert len(sut[rs[2]]) == 2
+    assert len(sut.keys()) == 0
 
 
 def test_add_date_fails_to_match_for_recurring_month_when_before_buffer(setup_date_tests):
@@ -162,9 +158,7 @@ def test_add_date_fails_to_match_for_recurring_month_when_before_buffer(setup_da
         transaction_date=datetime.date(2018, 4, 27),
     )
 
-    assert len(sut[rs[0]]) == 2
-    assert len(sut[rs[1]]) == 2
-    assert len(sut[rs[2]]) == 2
+    assert len(sut.keys()) == 0
 
 
 def test_add_date_matches_for_month_with_no_buffer(setup_date_tests):
@@ -176,9 +170,8 @@ def test_add_date_matches_for_month_with_no_buffer(setup_date_tests):
         transaction_date=datetime.date(2018, 5, 1),
     )
 
+    assert len(sut.keys()) == 1
     assert len(sut[rs[0]]) == 3
-    assert len(sut[rs[1]]) == 2
-    assert len(sut[rs[2]]) == 2
 
 
 def test_add_date_fails_for_day_with_no_buffer_when_after(setup_date_tests):
@@ -190,9 +183,7 @@ def test_add_date_fails_for_day_with_no_buffer_when_after(setup_date_tests):
         transaction_date=datetime.date(2018, 5, 2),
     )
 
-    assert len(sut[rs[0]]) == 2
-    assert len(sut[rs[1]]) == 2
-    assert len(sut[rs[2]]) == 2
+    assert len(sut.keys()) == 0
 
 
 def test_add_date_fails_for_day_with_no_buffer_when_before(setup_date_tests):
@@ -204,9 +195,7 @@ def test_add_date_fails_for_day_with_no_buffer_when_before(setup_date_tests):
         transaction_date=datetime.date(2018, 4, 29),
     )
 
-    assert len(sut[rs[0]]) == 2
-    assert len(sut[rs[1]]) == 2
-    assert len(sut[rs[2]]) == 2
+    assert len(sut.keys()) == 0
 
 
 def test_add_date_matches_if_falls_within_buffer_after_date(setup_date_tests):
@@ -218,9 +207,8 @@ def test_add_date_matches_if_falls_within_buffer_after_date(setup_date_tests):
         transaction_date=datetime.date(2018, 5, 2),
     )
 
+    assert len(sut.keys()) == 1
     assert len(sut[rs[0]]) == 3
-    assert len(sut[rs[1]]) == 2
-    assert len(sut[rs[2]]) == 2
 
 
 def test_add_date_matches_if_falls_within_buffer_before_date(setup_date_tests):
@@ -232,9 +220,8 @@ def test_add_date_matches_if_falls_within_buffer_before_date(setup_date_tests):
         transaction_date=datetime.date(2018, 4, 30),
     )
 
+    assert len(sut.keys()) == 1
     assert len(sut[rs[0]]) == 3
-    assert len(sut[rs[1]]) == 2
-    assert len(sut[rs[2]]) == 2
 
 
 def test_add_date_matches_for_day_with_no_buffer(setup_date_tests):
@@ -245,10 +232,8 @@ def test_add_date_matches_for_day_with_no_buffer(setup_date_tests):
         repeats_every_type='DAY',
         transaction_date=datetime.date(2018, 5, 28),
     )
-
+    assert len(sut.keys()) == 1
     assert len(sut[rs[0]]) == 3
-    assert len(sut[rs[1]]) == 2
-    assert len(sut[rs[2]]) == 2
 
 
 def test_get_best_match(sample_item, starting_rule_sets, add_simple_operator_rules):
@@ -266,6 +251,6 @@ def test_get_best_match(sample_item, starting_rule_sets, add_simple_operator_rul
 
     sut = {rule_set: [] for rule_set in nrs}
     sut = get_rule_sets_with_name_matches(sample_item, 'abc123')
-    sut = add_amount_matches(sut, 5)
+    sut = add_amount_matches(sut, -5)
 
     assert get_best_match(sut) == rs[0]

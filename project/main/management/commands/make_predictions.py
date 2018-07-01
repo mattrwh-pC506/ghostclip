@@ -1,5 +1,7 @@
 from collections import defaultdict
+from datetime import timedelta
 from dateutil import relativedelta
+from calendar import monthrange
 from statistics import mean
 from django.core.management.base import BaseCommand, CommandError
 from main.models import Transaction
@@ -11,6 +13,10 @@ from main.gacalendar.rule_sets import (
 import django_rq
 
 
+def closest_weekday_date(date_to_check, weekday):
+    return [d for d in[date_to_check+timedelta(o-3) for o in range(7)] if weekday % 7 == d.weekday()][0]
+
+
 def calculate_next_date(transactions, last_transaction):
     date_to_check = last_transaction.date
     rule_set = last_transaction.rule_set
@@ -18,29 +24,29 @@ def calculate_next_date(transactions, last_transaction):
     next_transaction_date = None
 
     if date_rule.repeats_every_type == 'MONTH':
-        most_common_day = date_rule.most_common_day()
+        most_common_day = rule_set.most_common_day() or last_transaction.date.day
         next_transaction_date = date_to_check + \
             relativedelta.relativedelta(months=+date_rule.repeats_every_num)
+        days_in_month = monthrange(
+            next_transaction_date.year, next_transaction_date.month)[1]
+        if most_common_day > days_in_month:
+            most_common_day = days_in_month
         next_transaction_date.replace(day=most_common_day)
         weekday = next_transaction_date.weekday()
         if weekday > 4 and weekday <= 6:
             days_to_add = 7 - weekday
-            next_transaction_date = date_to_check + \
+            next_transaction_date = next_transaction_date + \
                 relativedelta.relativedelta(days=+days_to_add)
     elif date_rule.repeats_every_type == 'DAY':
         next_transaction_date = date_to_check + \
             relativedelta.relativedelta(days=+date_rule.repeats_every_num)
 
-        if ((date_rule.repeats_every_num % 7) == 0)
+        if ((date_rule.repeats_every_num % 7) == 0):
             most_common_weekday = rule_set.most_common_day_of_week()
             next_transaction_date = closest_weekday_date(
                 next_transaction_date, most_common_weekday)
 
     return next_transaction_date
-
-
-def closest_weekday_date(date_to_check, weekday):
-    return [d for d in[date_to_check+timedelta(o-3) for o in range(7)] if weekday % 7 == d.weekday()][0]
 
 
 class Command(BaseCommand):

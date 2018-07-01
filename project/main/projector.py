@@ -18,17 +18,20 @@ def add_amount_matches(rule_sets, amount):
     return build_rule_set_map(amount, rules, rule_sets)
 
 
-def get_best_match_by_date(sets, date):
-    rules = DateRule.objects.filter(rule_set__in=list(sets.keys()))
+def add_date_matches(rule_sets, date):
+    rules = DateRule.objects.filter(rule_set__in=list(rule_sets.keys()))
     date_set_matches = build_rule_set_map(date, rules, {})
-    if date_set_matches:
-        return max(date_set_matches.keys(), key=(lambda k: len(date_set_matches[k])))
-    else:
-        return None
+    return {rs: [*date_set_matches[rs], *rule_sets[rs]]
+            for rs in date_set_matches.keys()}
+
+
+def get_best_match(rule_sets):
+    if rule_sets:
+        return max(rule_sets.keys(), key=(lambda k: len(rule_sets[k])))
 
 
 def recalculate_ruleset_latest_transaction(rs):
-    transactions = Transaction.object.filter(rule_set=rs)
+    transactions = Transaction.objects.filter(rule_set=rs)
     last_transaction = transactions.order_by('-date').first()
     rs.last_transaction_name = last_transaction.name
     rs.last_transaction_amount = last_transaction.amount
@@ -38,11 +41,12 @@ def recalculate_ruleset_latest_transaction(rs):
 def add_to_matching_rule_set_if_any(transaction):
     item = transaction.account.item
     sets = get_rule_sets_with_name_matches(item, transaction.name)
-    sets = add_amount_matches(sets, transaction.amount)
+    sets = add_amount_matches(sets, abs(transaction.amount))
 
     if sets:
-        matching_rs = get_best_match_by_date(sets, transaction.date)
+        sets = add_date_matches(sets, transaction.date)
+        matching_rs = get_best_match(sets)
         if matching_rs:
             Transaction.objects.filter(
                 pk=transaction.pk).update(rule_set=matching_rs)
-            recalculate_ruleset_latest_transaction(rs)
+            recalculate_ruleset_latest_transaction(matching_rs)

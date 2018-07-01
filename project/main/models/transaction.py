@@ -31,4 +31,4 @@ class Transaction(models.Model):
     name = models.TextField(null=True)
     pending = models.BooleanField()
     rule_set = models.ForeignKey(
-        RuleSet, null=True, on_delete=models.SET_NULL, related_name='transactions')
+        RuleSet, null=True, blank=True, on_delete=models.SET_NULL, related_name='transactions')

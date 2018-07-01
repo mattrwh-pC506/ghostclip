@@ -5,7 +5,7 @@ from .ga import build_service
 
 def set_color_id(rule_set):
     if rule_set.last_transaction_amount < 0:
-        color_id = '4'
+        color_id = '6'
     else:
         color_id = '9'
     return color_id
