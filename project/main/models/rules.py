@@ -103,8 +103,8 @@ class AmountRule(models.Model):
 
 
 class DateRule(models.Model):
-    rule_set = models.ForeignKey(RuleSet, on_delete=models.CASCADE)
-    date_rule_info = models.OneToOneField(RuleSet, on_delete=models.CASCADE)
+    rule_set = models.OneToOneField(
+        RuleSet, on_delete=models.CASCADE, related_name='date_rule_info')
     repeats_every_num = models.IntegerField(default=1)
     starting_date = models.DateField()
     day_range_buffer = models.IntegerField(default=0)
