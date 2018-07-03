@@ -53,4 +53,4 @@ def add_to_matching_rule_set_if_any(transaction):
             Transaction.objects.filter(
                 pk=transaction.pk).update(rule_set=matching_rs)
             recalculate_ruleset_latest_transaction(matching_rs)
-            django_rq.enqueue(update_predictions_from_rule_set, rule_set)
+            django_rq.enqueue(update_predictions_from_rule_set, matching_rs)
