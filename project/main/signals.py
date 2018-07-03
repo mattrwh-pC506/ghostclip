@@ -5,7 +5,7 @@ from main.gacalendar.transactions import (
     create_transaction_event,
     patch_transaction_event,
     delete_transaction_event)
-from main.projector import add_to_matching_rule_set_if_any
+from main.matcher import add_to_matching_rule_set_if_any
 
 import django_rq
 

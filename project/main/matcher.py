@@ -1,5 +1,8 @@
 from main.models.transaction import Transaction
 from main.models.rules import NameRule, AmountRule, DateRule
+from main.predictor import update_predictions_from_rule_set
+
+import django_rq
 
 
 def build_rule_set_map(field_value, rules, rule_sets):
@@ -46,7 +49,8 @@ def add_to_matching_rule_set_if_any(transaction):
     if sets:
         sets = add_date_matches(sets, transaction.date)
         matching_rs = get_best_match(sets)
-        if matching_rs:
+        if matching_rs and (transaction.rule_set != matching_rs):
             Transaction.objects.filter(
                 pk=transaction.pk).update(rule_set=matching_rs)
             recalculate_ruleset_latest_transaction(matching_rs)
+            django_rq.enqueue(update_predictions_from_rule_set, rule_set)

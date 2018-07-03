@@ -1,7 +1,7 @@
 import pytest
 import datetime
 from main.models import Transaction, RuleSet, NameRule, AmountRule, DateRule
-from main.projector import (
+from main.matcher import (
     get_rule_sets_with_name_matches,
     add_amount_matches,
     add_date_matches,

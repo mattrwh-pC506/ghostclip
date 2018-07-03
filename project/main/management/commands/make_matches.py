@@ -1,7 +1,7 @@
 import datetime
 from django.core.management.base import BaseCommand
 from main.models import Transaction
-from main.projector import add_to_matching_rule_set_if_any
+from main.matcher import add_to_matching_rule_set_if_any
 
 
 class Command(BaseCommand):
