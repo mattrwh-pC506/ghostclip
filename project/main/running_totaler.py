@@ -9,14 +9,14 @@ def get_date_bounds(dt, days):
 
 
 def weekly_rt(dt):
-    start, end = get_week_bounds(dt, 6)
+    start, end = get_date_bounds(dt, 6)
     transactions_this_week = Transaction.objects.filter(
         date__range=(start, end), rule_set__isnull=True)
     return sum(t.amount for t in transactions_this_week)
 
 
 def create_or_update_running_total_from_transaction(transaction):
-    start, end = get_week_bounds(transaction.date, 6)
+    start, end = get_date_bounds(transaction.date, 6)
     rt = RunningTotal.objects.filter(start_date=start, end_date=end)
     rt_amount = weekly_rt(transaction.date)
     if rt:

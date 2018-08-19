@@ -7,7 +7,11 @@ from main.gacalendar.transactions import (
     delete_transaction_event)
 from main.matcher import add_to_matching_rule_set_if_any
 
-from main.gacalendar.running_totals import create_running_total_event, patch_running_total_event
+from main.gacalendar.running_totals import (
+    create_running_total_event,
+    patch_running_total_event,
+    delete_running_total_event)
+
 from main.running_totaler import create_or_update_running_total_from_transaction
 
 import django_rq
@@ -42,3 +46,8 @@ def running_total_saved(sender, instance, created, **kwargs):
             django_rq.enqueue(create_running_total_event, instance)
     else:
         django_rq.enqueue(patch_running_total_event, instance)
+
+
+@receiver(post_delete, sender=Transaction)
+def running_total_deleted(sender, instance, **kwargs):
+    django_rq.enqueue(delete_running_total_event, instance)

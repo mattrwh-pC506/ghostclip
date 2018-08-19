@@ -13,7 +13,7 @@ def set_color_id(rule_set):
 
 def build_body(rule_set):
     return {
-        'summary': f'{rule_set.last_transaction_amount} / {rule_set.last_transaction_name}',
+        'summary': f'... {rule_set.last_transaction_amount} / {rule_set.last_transaction_name}',
         'description': rule_set.last_transaction_name,
         'start': {'date': rule_set.predicted_next_transaction_date.isoformat()},
         'end': {'date': rule_set.predicted_next_transaction_date.isoformat()},

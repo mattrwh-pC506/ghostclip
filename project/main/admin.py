@@ -12,6 +12,7 @@ from main.models.user import User, Family
 from main.models.item import Item
 from main.models.transaction import Transaction, Account
 from main.models.rules import RuleSet, NameRule, AmountRule, DateRule
+from main.models.running_totals import RunningTotal
 
 client = plaid.Client(client_id=settings.PLAID_CLIENT_ID, secret=settings.PLAID_SECRET,
                       public_key=settings.PLAID_PUBLIC_KEY, environment=settings.PLAID_ENV)
@@ -107,3 +108,8 @@ class DateRuleAdmin(admin.ModelAdmin):
         'starting_date',
         'day_range_buffer',
     )
+
+
+@admin.register(RunningTotal)
+class RunningTotaldmin(admin.ModelAdmin):
+    list_display = ('amount', 'target', 'start_date', 'end_date',)

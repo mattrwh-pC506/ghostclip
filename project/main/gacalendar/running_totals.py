@@ -1,3 +1,4 @@
+import os
 from datetime import timedelta
 from .ga import build_service
 
@@ -7,7 +8,7 @@ def build_body(running_total):
         'summary': f'{running_total.amount} / {running_total.target}',
         'description': f'Running total for week starting in {running_total.start_date.isoformat()} and ending in {running_total.end_date.isoformat()}',
         'start': {'date': running_total.start_date.isoformat()},
-        'end': {'date': running_total.start_date.isoformat()},
+        'end': {'date': (running_total.end_date + timedelta(days=1)).isoformat()},
         'colorId': '1',
     }
 
