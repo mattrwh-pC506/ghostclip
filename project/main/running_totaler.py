@@ -3,7 +3,8 @@ from datetime import datetime, timedelta
 
 
 def get_date_bounds(dt, days):
-    start = dt - timedelta(days=dt.weekday())
+    monday = dt - timedelta(days=dt.weekday())
+    start = monday + timedelta(days=2)
     end = start + timedelta(days=days)
     return start, end
 
