@@ -48,6 +48,6 @@ def running_total_saved(sender, instance, created, **kwargs):
         django_rq.enqueue(patch_running_total_event, instance)
 
 
-@receiver(post_delete, sender=Transaction)
+@receiver(post_delete, sender=RunningTotal)
 def running_total_deleted(sender, instance, **kwargs):
     django_rq.enqueue(delete_running_total_event, instance)
