@@ -25,7 +25,7 @@ def create_or_update_running_total_from_transaction(transaction):
         last_start, last_end = get_date_bounds(
             transaction.date - timedelta(days=7), 6)
         last_rt = RunningTotal.objects.filter(
-            start_date=last_start, end_date=last_end)
+            start_date=last_start, end_date=last_end)[0]
         if last_rt:
             last_target = last_rt.target
         else:
